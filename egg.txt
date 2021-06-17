@@ -1,0 +1,440 @@
+{
+    "id": "egg",
+    "metadata": {
+        "operation": "retrieve",
+        "provider": "Oxford University Press",
+        "schema": "RetrieveEntry"
+    },
+    "results": [
+        {
+            "id": "egg",
+            "language": "en-gb",
+            "lexicalEntries": [
+                {
+                    "derivatives": [
+                        {
+                            "id": "eggless",
+                            "text": "eggless"
+                        }
+                    ],
+                    "entries": [
+                        {
+                            "etymologies": [
+                                "Middle English (superseding earlier ey, from Old English ǣg): from Old Norse"
+                            ],
+                            "homographNumber": "100",
+                            "pronunciations": [
+                                {
+                                    "audioFile": "https://audio.oxforddictionaries.com/en/mp3/egg_gb_1.mp3",
+                                    "dialects": [
+                                        "British English"
+                                    ],
+                                    "phoneticNotation": "IPA",
+                                    "phoneticSpelling": "ɛɡ"
+                                }
+                            ],
+                            "senses": [
+                                {
+                                    "definitions": [
+                                        "an oval or round object laid by a female bird, reptile, fish, or invertebrate, usually containing a developing embryo. The eggs of birds are enclosed in a chalky shell, while those of reptiles are in a leathery membrane."
+                                    ],
+                                    "domainClasses": [
+                                        {
+                                            "id": "zoology",
+                                            "text": "Zoology"
+                                        }
+                                    ],
+                                    "id": "m_en_gbus0313670.007",
+                                    "semanticClasses": [
+                                        {
+                                            "id": "egg",
+                                            "text": "Egg"
+                                        }
+                                    ],
+                                    "shortDefinitions": [
+                                        "object laid by female bird etc."
+                                    ],
+                                    "subsenses": [
+                                        {
+                                            "definitions": [
+                                                "an infertile bird's egg, especially one from a chicken, used for food"
+                                            ],
+                                            "examples": [
+                                                {
+                                                    "text": "scrambled eggs"
+                                                },
+                                                {
+                                                    "notes": [
+                                                        {
+                                                            "text": "mass noun",
+                                                            "type": "grammaticalNote"
+                                                        }
+                                                    ],
+                                                    "text": "egg and bacon"
+                                                },
+                                                {
+                                                    "notes": [
+                                                        {
+                                                            "text": "as modifier",
+                                                            "type": "grammaticalNote"
+                                                        }
+                                                    ],
+                                                    "text": "an egg sandwich"
+                                                }
+                                            ],
+                                            "id": "m_en_gbus0313670.010",
+                                            "semanticClasses": [
+                                                {
+                                                    "id": "food",
+                                                    "text": "Food"
+                                                }
+                                            ],
+                                            "shortDefinitions": [
+                                                "infertile bird's egg used for food"
+                                            ]
+                                        },
+                                        {
+                                            "definitions": [
+                                                "a thing resembling a bird's egg in shape"
+                                            ],
+                                            "examples": [
+                                                {
+                                                    "text": "chocolate eggs"
+                                                }
+                                            ],
+                                            "id": "m_en_gbus0313670.011",
+                                            "semanticClasses": [
+                                                {
+                                                    "id": "shape",
+                                                    "text": "Shape"
+                                                }
+                                            ],
+                                            "shortDefinitions": [
+                                                "thing shaped like bird's egg"
+                                            ]
+                                        }
+                                    ],
+                                    "synonyms": [
+                                        {
+                                            "language": "en",
+                                            "text": "ovum"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "gamete"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "germ cell"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "zygote"
+                                        }
+                                    ],
+                                    "thesaurusLinks": [
+                                        {
+                                            "entry_id": "egg",
+                                            "sense_id": "t_en_gb0004660.001"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "definitions": [
+                                        "the female reproductive cell in animals and plants; an ovum."
+                                    ],
+                                    "domainClasses": [
+                                        {
+                                            "id": "biology",
+                                            "text": "Biology"
+                                        }
+                                    ],
+                                    "domains": [
+                                        {
+                                            "id": "biology",
+                                            "text": "Biology"
+                                        }
+                                    ],
+                                    "id": "m_en_gbus0313670.014",
+                                    "semanticClasses": [
+                                        {
+                                            "id": "cell",
+                                            "text": "Cell"
+                                        }
+                                    ],
+                                    "shortDefinitions": [
+                                        "ovum in animals or plants"
+                                    ],
+                                    "synonyms": [
+                                        {
+                                            "language": "en",
+                                            "text": "ovum"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "gamete"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "germ cell"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "zygote"
+                                        }
+                                    ],
+                                    "thesaurusLinks": [
+                                        {
+                                            "entry_id": "egg",
+                                            "sense_id": "t_en_gb0004660.001"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "definitions": [
+                                        "a decorative oval moulding, used alternately with triangular shapes"
+                                    ],
+                                    "domainClasses": [
+                                        {
+                                            "id": "architecture",
+                                            "text": "Architecture"
+                                        },
+                                        {
+                                            "id": "furniture",
+                                            "text": "Furniture"
+                                        }
+                                    ],
+                                    "domains": [
+                                        {
+                                            "id": "architecture",
+                                            "text": "Architecture"
+                                        }
+                                    ],
+                                    "examples": [
+                                        {
+                                            "notes": [
+                                                {
+                                                    "text": "as modifier",
+                                                    "type": "grammaticalNote"
+                                                }
+                                            ],
+                                            "text": "egg and dart moulding"
+                                        }
+                                    ],
+                                    "id": "m_en_gbus0313670.016",
+                                    "semanticClasses": [
+                                        {
+                                            "id": "architectural_feature",
+                                            "text": "Architectural_Feature"
+                                        }
+                                    ],
+                                    "shortDefinitions": [
+                                        "decorative oval moulding"
+                                    ]
+                                },
+                                {
+                                    "definitions": [
+                                        "a person of a specified kind"
+                                    ],
+                                    "examples": [
+                                        {
+                                            "text": "the biography portrays him as a thoroughly bad egg"
+                                        }
+                                    ],
+                                    "id": "m_en_gbus0313670.018",
+                                    "notes": [
+                                        {
+                                            "text": "with adjective",
+                                            "type": "grammaticalNote"
+                                        }
+                                    ],
+                                    "registers": [
+                                        {
+                                            "id": "informal",
+                                            "text": "Informal"
+                                        },
+                                        {
+                                            "id": "dated",
+                                            "text": "Dated"
+                                        }
+                                    ],
+                                    "semanticClasses": [
+                                        {
+                                            "id": "specified_type",
+                                            "text": "Specified_Type"
+                                        }
+                                    ],
+                                    "shortDefinitions": [
+                                        "specified kind of person"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "language": "en-gb",
+                    "lexicalCategory": {
+                        "id": "noun",
+                        "text": "Noun"
+                    },
+                    "phrases": [
+                        {
+                            "id": "don%27t_put_all_your_eggs_in_one_basket",
+                            "text": "don't put all your eggs in one basket"
+                        },
+                        {
+                            "id": "go_suck_an_egg",
+                            "text": "go suck an egg"
+                        },
+                        {
+                            "id": "kill_the_goose_that_lays_the_golden_eggs",
+                            "text": "kill the goose that lays the golden eggs"
+                        },
+                        {
+                            "id": "lay_an_egg",
+                            "text": "lay an egg"
+                        },
+                        {
+                            "id": "with_egg_on_one%27s_face",
+                            "text": "with egg on one's face"
+                        }
+                    ],
+                    "text": "egg"
+                }
+            ],
+            "type": "headword",
+            "word": "egg"
+        },
+        {
+            "id": "egg",
+            "language": "en-gb",
+            "lexicalEntries": [
+                {
+                    "entries": [
+                        {
+                            "etymologies": [
+                                "Middle English: from Old Norse eggja ‘incite’"
+                            ],
+                            "grammaticalFeatures": [
+                                {
+                                    "id": "transitive",
+                                    "text": "Transitive",
+                                    "type": "Subcategorization"
+                                }
+                            ],
+                            "homographNumber": "200",
+                            "notes": [
+                                {
+                                    "text": "\"egg someone on\"",
+                                    "type": "wordFormNote"
+                                }
+                            ],
+                            "pronunciations": [
+                                {
+                                    "audioFile": "https://audio.oxforddictionaries.com/en/mp3/egg_gb_1.mp3",
+                                    "dialects": [
+                                        "British English"
+                                    ],
+                                    "phoneticNotation": "IPA",
+                                    "phoneticSpelling": "ɛɡ"
+                                }
+                            ],
+                            "senses": [
+                                {
+                                    "definitions": [
+                                        "encourage someone to do something foolish or risky"
+                                    ],
+                                    "examples": [
+                                        {
+                                            "text": "he liked to boast and she would egg him on shamelessly"
+                                        }
+                                    ],
+                                    "id": "m_en_gbus0313680.005",
+                                    "shortDefinitions": [
+                                        "encourage someone to do something foolish or risky"
+                                    ],
+                                    "synonyms": [
+                                        {
+                                            "language": "en",
+                                            "text": "urge"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "goad"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "incite"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "provoke"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "prick"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "sting"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "propel"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "push"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "drive"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "prod"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "prompt"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "induce"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "impel"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "spur on"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "cheer on"
+                                        }
+                                    ],
+                                    "thesaurusLinks": [
+                                        {
+                                            "entry_id": "egg_someone_on",
+                                            "sense_id": "t_en_gb0004660.002"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "language": "en-gb",
+                    "lexicalCategory": {
+                        "id": "verb",
+                        "text": "Verb"
+                    },
+                    "text": "egg"
+                }
+            ],
+            "type": "headword",
+            "word": "egg"
+        }
+    ],
+    "word": "egg"
+}

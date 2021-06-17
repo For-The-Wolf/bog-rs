@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>{{title}}</title>
+        <link rel="shortcut icon" type="image/png" href="letters/favicon.png"/>
+        <script>
+            function reveal(elem_ID)
+            {
+                if (document.getElementById(elem_ID).style.display === "none"){
+                    document.getElementById(elem_ID).style.display="block";
+                }
+                else{
+                    document.getElementById(elem_ID).style.display="none";
+                }
+            }
+            function start_timer()
+            {
+                var timer_len = new Date().getTime()+(2*60*1000);
+                var x = setInterval(function() {
+                    var now = new Date().getTime();
+                    var distance = timer_len - now;
+                    var minutes = Math.floor(distance/(1000*60));
+                    var seconds = Math.floor((distance % (1000*60))/1000);
+                    if (seconds < 10){
+                        document.getElementById("timery").innerHTML = "Time remaining - 0" + minutes + ":0" + seconds;
+                    }
+                    else{
+                        document.getElementById("timery").innerHTML = "Time remaining - 0" + minutes + ":" + seconds;
+                    }
+                    if (distance < 0){
+                        clearInterval(x);
+                        document.getElementById("timery").innerHTML = "TIME'S UP NERDS";
+                    }
+                })
+            }
+            function and_then_deactivate(butt_ID)
+            {
+                document.getElementById(butt_ID).disabled = 'disabled';
+                document.getElementById(butt_ID).src = "letters/"+butt_ID+"_pressed.png" ;
+            }
+        </script>
+
+
+    </head>
+    <style>
+      body{
+          background-color: #fdf6e3;
+      }
+      h1 {
+         font-family: Courier New;
+      }
+      h2 {
+         font-family: Courier New;
+      }
+      h3 {
+         font-family: Courier New;
+      }
+      .center{
+          margin-left: auto;
+          margin-right:auto;
+      }
+    </style>
+    <body>
+        <div style="text-align:center;color:#073642">
+            <div id="title">
+                <img src="letters/title.png" style="width:564px;">
+            </div>
+            <input type="image" src="letters/start.png" style="width:282px" id="start" value="Start Game!"  onclick='start_timer(); reveal("game");and_then_deactivate("start")'>
+            <div id="game" style="display:none;">
+                <table class="center" style="width:564px;">
+                    <caption>
+                        <input type="image" src="/letters/new.png" style="width:282px" value=" New Game " onClick="window.location.reload();">
+                        <h3>absolutely bog-rs m8</h3>
+                        <h2 id="timery"></h2>
+                    </caption>
+                    {% for row in rows %}
+                    <tr>
+                        {% for letter in row %}
+                        <td style="text-align:center;padding:0px;">
+                            <img src="/letters/{{letter}}.png" style="width:128px;height:128px;">
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+                <h2>Solutions </h2>
+                <input type="image" src="/letters/solutions.png" style="width:282px" id="solutions" value="Reveal solutions" onclick='reveal("result_list");and_then_deactivate("solutions")'>
+                <div id="result_list", style="display:none">
+                    <h2> ({{n_solutions}} found): </h2>
+                    {% for solution in solutions %}
+                    <div>
+                        <h3>{{solution}}</h3>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
