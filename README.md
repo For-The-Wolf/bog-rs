@@ -9,4 +9,4 @@ Many advantages over the traditional game, including a sensible letter distribut
 
 I hope to host this somewhere soon.
 
-![BogChamp](https://github.com/For-The-Wolf/bog-rs/blob/master/readme_images/bogchamp2.png)
+![BogChamp](https://github.com/For-The-Wolf/bog-rs/blob/master/readme_images/bog-rs.png)
