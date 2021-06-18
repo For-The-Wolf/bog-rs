@@ -114,18 +114,6 @@ pub fn check_word(word: String) -> IsValid {
 }
 
 #[test]
-fn loads() {
-    if let Some([a, b]) = load_credentials() {
-        assert_eq!(
-            (a, b),
-            (
-                String::from("1f3ecda9"),
-                String::from("ea1f778ed5c44fb97bc0401c650d4ba5")
-            )
-        );
-    }
-}
-#[test]
 fn gets_result() {
     if let Some([a, b]) = load_credentials() {
         if let Ok(_) = retrive_word(String::from("egg"), a, b) {
