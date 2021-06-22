@@ -1,0 +1,16 @@
+body{
+	background-color: #fdf6e3;
+}
+h1 {
+	font-family: Courier New;
+}
+h2 {
+	font-family: Courier New;
+}
+h3 {
+	font-family: Courier New;
+}
+.center{
+	margin-left: auto;
+	margin-right:auto;
+}

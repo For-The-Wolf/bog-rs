@@ -2,65 +2,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>{{title}}</title>
-        <link rel="shortcut icon" type="image/png" href="letters/favicon.png"/>
-        <script>
-            function reveal(elem_ID)
-            {
-                if (document.getElementById(elem_ID).style.display === "none"){
-                    document.getElementById(elem_ID).style.display="block";
-                }
-                else{
-                    document.getElementById(elem_ID).style.display="none";
-                }
-            }
-            function start_timer()
-            {
-                var timer_len = new Date().getTime()+(2*60*1000);
-                var x = setInterval(function() {
-                    var now = new Date().getTime();
-                    var distance = timer_len - now;
-                    var minutes = Math.floor(distance/(1000*60));
-                    var seconds = Math.floor((distance % (1000*60))/1000);
-                    if (seconds < 10){
-                        document.getElementById("timery").innerHTML = "Time remaining - 0" + minutes + ":0" + seconds;
-                    }
-                    else{
-                        document.getElementById("timery").innerHTML = "Time remaining - 0" + minutes + ":" + seconds;
-                    }
-                    if (distance < 0){
-                        clearInterval(x);
-                        document.getElementById("timery").innerHTML = "TIME'S UP NERDS";
-                    }
-                })
-            }
-            function and_then_deactivate(butt_ID)
-            {
-                document.getElementById(butt_ID).disabled = 'disabled';
-                document.getElementById(butt_ID).src = "letters/"+butt_ID+"_pressed.png" ;
-            }
-        </script>
-
-
+        <title>{{title}}+"cum"</title>
+        <script src="bog-rs.js" type="text/javascript"></script>
+        <link href="bog-rs.css" rel="stylesheet" type="text/css"/>
+        <link rel="shortcut icon" href="favicon.ico"/>
     </head>
-    <style>
-      body{
-          background-color: #fdf6e3;
-      }
-      h1 {
-         font-family: Courier New;
-      }
-      h2 {
-         font-family: Courier New;
-      }
-      h3 {
-         font-family: Courier New;
-      }
-      .center{
-          margin-left: auto;
-          margin-right:auto;
-      }
-    </style>
     <body>
         <div style="text-align:center;color:#073642">
             <div id="title">
@@ -84,15 +30,32 @@
                     </tr>
                     {% endfor %}
                 </table>
+                <form onsubmit="update_test();return false">
+                    <input type="text" id="eval_answer">
+                    <input type="submit">
+                </form>
+                <div id="test">
+                    ?
+                </div>
                 <h2>Solutions </h2>
                 <input type="image" src="/letters/solutions.png" style="width:282px" id="solutions" value="Reveal solutions" onclick='reveal("result_list");and_then_deactivate("solutions")'>
                 <div id="result_list", style="display:none">
-                    <h2> ({{n_solutions}} found): </h2>
-                    {% for solution in solutions %}
-                    <div>
-                        <h3>{{solution}}</h3>
-                    </div>
-                    {% endfor %}
+                    <table class="center">
+                        <caption>
+                            <h2> ({{n_solutions}} found): </h2>
+                        </caption>
+                        {% for solution_set in solutions %}
+                        <tr>
+                            {% for solution in solution_set %}
+                            <td style="padding:20px;">
+                                <h2>
+                                    {{solution}}
+                                </h2>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </table>
                 </div>
             </div>
         </div>
