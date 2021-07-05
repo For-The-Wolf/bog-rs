@@ -1,33 +1,20 @@
 use actix_files as fs;
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
-use std::collections::{HashMap, HashSet};
+use bog::BoggleBoard;
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::sync::Mutex;
 use tera::{Context, Tera};
 
 mod bog;
-// mod ode_check;
+mod ode_check;
 
-static SCORES: [(usize, usize); 13] = [
-    (4, 2),
-    (5, 4),
-    (6, 7),
-    (7, 12),
-    (8, 20),
-    (9, 33),
-    (10, 54),
-    (11, 88),
-    (12, 143),
-    (13, 232),
-    (14, 376),
-    (15, 609),
-    (16, 986),
-];
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 struct Word {
     word: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct WordList {
     words: Vec<String>,
 }
@@ -62,7 +49,7 @@ fn check_guess(guess: String, solutions: &Vec<String>) -> bool {
     }
     false
 }
-fn lst_to_json(words: Vec<String>, score: usize) -> String {
+fn lst_to_json(words: Vec<String>) -> String {
     let mut json = String::from(
         r#"
         {
@@ -77,12 +64,7 @@ fn lst_to_json(words: Vec<String>, score: usize) -> String {
     }
     json.push_str(
         r#"
-            ],
-        "score":"#,
-    );
-    json.push_str(&format!("{}", score));
-    json.push_str(
-        r#"
+            ]
         }
         "#,
     );
@@ -115,8 +97,6 @@ async fn eval_guess(
     game: web::Data<Mutex<bog::BoggleBoard>>,
     trie: web::Data<bog::TrieNode>,
     guesses: web::Data<Mutex<WordList>>,
-    score_map: web::Data<HashMap<usize, usize>>,
-    score: web::Data<Mutex<usize>>,
 ) -> impl Responder {
     let guess = req.match_info().get("word").unwrap_or("");
     let game = game.lock().unwrap();
@@ -125,14 +105,12 @@ async fn eval_guess(
         .into_iter()
         .collect::<Vec<String>>();
     let mut guesses = guesses.lock().unwrap();
-    let mut score = score.lock().unwrap();
     if check_guess(String::from(guess), &solutions)
-        && !&guesses.words.iter().any(|word| word == &guess)
+    //&& !&solutions.iter().any(|word| word == &guess)
     {
         guesses.words.push(String::from(guess.clone()));
-        *score += score_map[&guess.len()];
     }
-    let json = lst_to_json(guesses.words.clone(), *score);
+    let json = lst_to_json(guesses.words.clone());
     println!("{:?}", guesses.words);
     HttpResponse::Ok().body(json)
 }
@@ -140,9 +118,6 @@ async fn eval_guess(
 async fn main() -> std::io::Result<()> {
     let guesses = web::Data::new(Mutex::new(WordList::new()));
     let solutions = web::Data::new(Mutex::new(WordList::new()));
-    let score = web::Data::new(Mutex::new(0 as usize));
-    let score_map: web::Data<HashMap<usize, usize>> =
-        web::Data::new(SCORES.iter().cloned().collect());
     let game = web::Data::new(Mutex::new(bog::BoggleBoard::new()));
     HttpServer::new(move || {
         let tera = Tera::new("templates/**/*.html").unwrap();
@@ -150,17 +125,15 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(game.clone())
             .app_data(guesses.clone())
-            .app_data(score_map.clone())
             .app_data(solutions.clone())
-            .app_data(score.clone())
             .data(tera)
             .data(dictionary)
             .route("/", web::get().to(index))
-            .route("/eval_guess/{word}", web::post().to(eval_guess))
+            .route("/eval_guess/{word}", web::get().to(eval_guess))
             .service(fs::Files::new("/letters", "./templates/letters/").show_files_listing())
             .service(fs::Files::new("/", "./templates/").show_files_listing())
     })
-    .bind("127.0.0.1:8080")?
+    .bind("127.0.0.1:8000")?
     .run()
     .await
 }
