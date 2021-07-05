@@ -1,6 +1,6 @@
 # bog-rs
 BogChamp: word game web-app written in rust.
-Play now at [BogChamp.io](bogchamp.io)
+Play now at [BogChamp.io](https://bogchamp.io)
 
 Includes: 
  - `bog-rs`. A backend which generates the character grid. and 'solves' the grid by finding all the valid words.
