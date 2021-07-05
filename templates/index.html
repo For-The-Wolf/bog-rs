@@ -12,12 +12,13 @@
             <div id="title">
                 <img src="letters/title.png" style="width:564px;">
             </div>
+            <h3>absolutely bog-rs m8</h3>
             <input type="image" src="letters/start.png" style="width:282px" id="start" value="Start Game!"  onclick='start_timer(); reveal("game");and_then_deactivate("start")'>
             <div id="game" style="display:none;">
                 <table class="center" style="width:564px;">
                     <caption>
                         <input type="image" src="/letters/new.png" style="width:282px" value=" New Game " onClick="window.location.reload();">
-                        <h3>absolutely bog-rs m8</h3>
+                        <h1 id="score_box">Score - 0</h1>
                         <h2 id="timery"></h2>
                     </caption>
                     {% for row in rows %}
@@ -30,34 +31,39 @@
                     </tr>
                     {% endfor %}
                 </table>
-                <form onsubmit="update_test();return false">
-                    <input type="text" id="eval_answer">
-                    <input type="submit">
+                <form id="submit_form" onsubmit="update_test();return false">
+                    <h2>Solutions</h2>
+                    <input type="text" id="eval_answer" autocomplete="off" placeholder="Guess word...">
+                    <input type="submit" value="">
                 </form>
-                <div id="test">
-                    ?
+                <div id="guesses">
                 </div>
-                <h2>Solutions </h2>
-                <input type="image" src="/letters/solutions.png" style="width:282px" id="solutions" value="Reveal solutions" onclick='reveal("result_list");and_then_deactivate("solutions")'>
-                <div id="result_list", style="display:none">
-                    <table class="center">
-                        <caption>
-                            <h2> ({{n_solutions}} found): </h2>
-                        </caption>
-                        {% for solution_set in solutions %}
-                        <tr>
-                            {% for solution in solution_set %}
-                            <td style="padding:20px;">
-                                <h2>
-                                    {{solution}}
-                                </h2>
-                            </td>
+                <div id="solution_zone" style="display:none;">
+                    <input type="image" src="/letters/solutions.png" style="width:282px;" id="solutions" value="Reveal solutions" onclick='reveal("result_list");and_then_deactivate("solutions")'>
+                    <div id="result_list", style="display:none">
+                        <table class="center">
+                            <caption>
+                                <h2> ({{n_solutions}} found): </h2>
+                            </caption>
+                            {% for solution_set in solutions %}
+                            <tr>
+                                {% for solution in solution_set %}
+                                <td style="padding:20px;">
+                                    <h2>
+                                        {{solution}}
+                                    </h2>
+                                </td>
+                                {% endfor %}
+                            </tr>
                             {% endfor %}
-                        </tr>
-                        {% endfor %}
-                    </table>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="bottom">
+            BogChamp and bog-rs are open-source and available at <a href="https://github.com/For-The-Wolf/bog-rs">https://github.com/For-The-Wolf/bog-rs</a>
+        </div>
+
     </body>
 </html>

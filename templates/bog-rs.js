@@ -10,20 +10,26 @@ function reveal(elem_ID)
 }
 function update_test()
 {
-	var word = document.getElementById("eval_answer").value;
-	fetch("./eval_guess/"+word)
+	var textbox = document.getElementById("eval_answer"); 
+	var word = textbox.value;
+	if (word){
+	fetch("./eval_guess/"+word, {method: 'POST'})
 		.then(response => response.json())
 	  .then(data => {
 			console.log(data);
-			var results = document.getElementById("test");
+			var results = document.getElementById("guesses");
 			delete_children(results);
 			for (word in data.words) {
-				var tag = document.createElement("div");
+				var tag = document.createElement("h2");
 				var text = document.createTextNode(data.words[word]);
 				tag.appendChild(text);
 				results.appendChild(tag);
+			document.getElementById("score_box").innerHTML = "Score - " + data.score;
 			}
 		});
+	textbox.value = '';
+		
+}
 }
 function delete_children(node){
 	while (node.firstChild){
@@ -33,7 +39,7 @@ function delete_children(node){
 function start_timer()
 {
 		var timer_len = new Date().getTime()+(2*60*1000);
-		var x = setInterval(function() {
+	var x = setInterval( () => {
 				var now = new Date().getTime();
 				var distance = timer_len - now;
 				var minutes = Math.floor(distance/(1000*60));
@@ -47,6 +53,8 @@ function start_timer()
 				if (distance < 0){
 						clearInterval(x);
 						document.getElementById("timery").innerHTML = "TIME'S UP NERDS";
+						reveal("solution_zone");
+						reveal("submit_form");
 				}
 		})
 }
