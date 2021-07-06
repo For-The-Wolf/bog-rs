@@ -41,7 +41,7 @@ impl WordList {
 fn format_solutions(solutions: &HashSet<String>) -> Vec<Vec<String>> {
     let n_columns: usize = 5;
     let mut sorted = solutions.clone().into_iter().collect::<Vec<String>>();
-    sorted.sort_by(|y, x| x.len().cmp(&y.len()));
+    sorted.sort_by_key(|x| std::cmp::Reverse(x.len()));
     let mut formatted: Vec<Vec<String>> = Vec::new();
     for _ in 0..((sorted.len() / n_columns) as f64).ceil() as isize + 1 {
         let mut row: Vec<String> = Vec::new();
@@ -127,10 +127,10 @@ async fn eval_guess(
     let mut guesses = guesses.lock().unwrap();
     let mut score = score.lock().unwrap();
     if check_guess(String::from(guess), &solutions)
-        && !&guesses.words.iter().any(|word| word == &guess)
+        && !&guesses.words.iter().any(|word| word == guess)
     {
-        guesses.words.push(String::from(guess.clone()));
         *score += score_map[&guess.len()];
+        guesses.words.push(String::from(guess));
     }
     let json = lst_to_json(guesses.words.clone(), *score);
     println!("{:?}", guesses.words);
@@ -140,7 +140,7 @@ async fn eval_guess(
 async fn main() -> std::io::Result<()> {
     let guesses = web::Data::new(Mutex::new(WordList::new()));
     let solutions = web::Data::new(Mutex::new(WordList::new()));
-    let score = web::Data::new(Mutex::new(0 as usize));
+    let score = web::Data::new(Mutex::new(0_usize));
     let score_map: web::Data<HashMap<usize, usize>> =
         web::Data::new(SCORES.iter().cloned().collect());
     let game = web::Data::new(Mutex::new(bog::BoggleBoard::new()));

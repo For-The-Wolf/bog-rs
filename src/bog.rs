@@ -8,7 +8,6 @@ use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{self, BufRead};
-use std::iter::FromIterator;
 use std::path::Path;
 
 const WEIGHTS: [f64; 26] = [
@@ -160,7 +159,7 @@ impl BoggleBoard {
                 );
             }
         }
-        HashSet::from_iter(words.into_iter())
+        words.into_iter().collect()
     }
 }
 impl TrieNode {
