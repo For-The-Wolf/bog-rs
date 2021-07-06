@@ -11,9 +11,11 @@ function reveal(elem_ID)
 function update_test()
 {
 	var textbox = document.getElementById("eval_answer"); 
+	var session_token = document.getElementById("super_secret_session_store").innerHTML;
+	console.log(session_token);
 	var word = textbox.value;
 	if (word){
-	fetch("./eval_guess/"+word, {method: 'POST'})
+	fetch("./eval_guess/"+session_token+"/"+word, {method: 'POST'})
 		.then(response => response.json())
 	  .then(data => {
 			console.log(data);

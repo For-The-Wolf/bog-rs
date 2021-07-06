@@ -1,8 +1,13 @@
 use actix_files as fs;
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
-use std::collections::{HashMap, HashSet};
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
+use std::collections::HashMap;
+use std::iter;
 use std::sync::Mutex;
 use tera::{Context, Tera};
+use actix_rt::time::Instant;
+use std::time::Duration;
 
 mod bog;
 // mod ode_check;
@@ -22,9 +27,53 @@ static SCORES: [(usize, usize); 13] = [
     (15, 609),
     (16, 986),
 ];
-#[derive(Debug)]
-struct Word {
-    word: String,
+struct Session {
+    board: bog::BoggleBoard,
+    solutions: WordList,
+    valid_guesses: WordList,
+    score: usize,
+    expiration_time: Instant,
+}
+
+impl Session {
+    fn new() -> Self {
+        let board = bog::BoggleBoard::new();
+        let solutions = WordList::new();
+        let valid_guesses = WordList::new();
+        let expiration_time = Instant::now();
+        Session {
+            board,
+            solutions,
+            valid_guesses,
+            score: 0,
+            expiration_time,
+        }
+    }
+}
+
+struct GameState {
+    sessions: HashMap<String, Session>,
+}
+
+impl GameState {
+    fn new() -> Self {
+        GameState {
+            sessions: HashMap::new(),
+        }
+    }
+    fn new_session(&mut self) -> String {
+        let mut rng = thread_rng();
+        let token: String = iter::repeat(())
+            .map(|()| rng.sample(Alphanumeric))
+            .map(char::from)
+            .take(12)
+            .collect();
+        self.sessions.insert(token.clone(), Session::new());
+        token
+    }
+    fn forget(&mut self, token: &str) {
+        self.sessions.remove(token);
+    }
 }
 
 #[derive(Debug)]
@@ -38,9 +87,9 @@ impl WordList {
         WordList { words }
     }
 }
-fn format_solutions(solutions: &HashSet<String>) -> Vec<Vec<String>> {
+fn format_solutions(solutions: &Vec<String>) -> Vec<Vec<String>> {
     let n_columns: usize = 5;
-    let mut sorted = solutions.clone().into_iter().collect::<Vec<String>>();
+    let mut sorted = solutions.clone();
     sorted.sort_by_key(|x| std::cmp::Reverse(x.len()));
     let mut formatted: Vec<Vec<String>> = Vec::new();
     for _ in 0..((sorted.len() / n_columns) as f64).ceil() as isize + 1 {
@@ -89,74 +138,96 @@ fn lst_to_json(words: Vec<String>, score: usize) -> String {
     json
 }
 
+async fn eval_guess(
+    req: HttpRequest,
+    score_map: web::Data<HashMap<usize, usize>>,
+    state: web::Data<Mutex<GameState>>,
+) -> impl Responder {
+    let guess = &req.match_info().get("word").unwrap_or("").to_lowercase();
+    let session_token = req.match_info().get("room").unwrap_or("");
+    let mut game_state = state.lock().unwrap();
+    if check_guess(
+        String::from(guess),
+        &game_state.sessions[session_token].solutions.words,
+    ) && !&game_state.sessions[session_token]
+        .valid_guesses
+        .words
+        .iter()
+        .any(|word| word == guess)
+    {
+        game_state.sessions.get_mut(session_token).unwrap().score += score_map[&guess.len()];
+        game_state
+            .sessions
+            .get_mut(session_token)
+            .unwrap()
+            .valid_guesses
+            .words
+            .push(String::from(guess));
+    }
+    let guesses = &game_state.sessions[session_token].valid_guesses;
+    let score = &game_state.sessions[session_token].score;
+    let json = lst_to_json(guesses.words.clone(), *score);
+    println!("{:?}", guesses.words);
+    game_state.sessions.get_mut(session_token).unwrap().expiration_time = Instant::now() + Duration::from_secs(5*60);
+    actix_rt::spawn(check_cleanup(state.clone(), String::from(session_token)));
+    HttpResponse::Ok().body(json)
+}
+
+async fn check_cleanup(state: web::Data<Mutex<GameState>>, token: String){
+    actix_rt::time::delay_for(Duration::from_secs(5*60)).await;
+    let mut game_state = state.lock().unwrap();
+    let expiration_time = game_state.sessions[&token].expiration_time; 
+    if Instant::now() >= expiration_time{
+        game_state.forget(&token);
+        println!("Session {} dropped", &token);
+    }
+}
+
 async fn index(
     tera: web::Data<Tera>,
     trie: web::Data<bog::TrieNode>,
-    game: web::Data<Mutex<bog::BoggleBoard>>,
-    guesses: web::Data<Mutex<WordList>>,
+    state: web::Data<Mutex<GameState>>,
 ) -> impl Responder {
     let mut data = Context::new();
-    let mut game = game.lock().unwrap();
-    game._randomise();
-    let mut guesses = guesses.lock().unwrap();
-    guesses.words = Vec::new();
+    let mut game_state = state.lock().unwrap();
+    let session_token = game_state.new_session();
+    println!("Session {} created", &session_token);
     data.insert("title", "BogChamp");
-    data.insert("rows", &game.letters);
-    let solution_set = game.solve(trie.get_ref());
-    let sorted = format_solutions(&solution_set);
+    data.insert("rows", &game_state.sessions[&session_token].board.letters);
+    let solution_set = game_state.sessions[&session_token]
+        .board
+        .solve(trie.get_ref());
+    let solutions: Vec<String> = solution_set.into_iter().collect();
+    game_state
+        .sessions
+        .get_mut(&session_token)
+        .unwrap()
+        .solutions
+        .words = solutions.clone();
+    let sorted = format_solutions(&solutions);
     data.insert("solutions", &sorted);
-    data.insert("n_solutions", &solution_set.len());
+    data.insert("n_solutions", &solutions.len());
+    data.insert("session_token", &session_token);
+    println!("{:?}", &session_token);
     let rendered = tera.render("index.html", &data).unwrap();
+    game_state.sessions.get_mut(&session_token).unwrap().expiration_time = Instant::now() + Duration::from_secs(5*60);
+    actix_rt::spawn(check_cleanup(state.clone(), session_token));
     HttpResponse::Ok().body(rendered)
-}
-
-async fn eval_guess(
-    req: HttpRequest,
-    game: web::Data<Mutex<bog::BoggleBoard>>,
-    trie: web::Data<bog::TrieNode>,
-    guesses: web::Data<Mutex<WordList>>,
-    score_map: web::Data<HashMap<usize, usize>>,
-    score: web::Data<Mutex<usize>>,
-) -> impl Responder {
-    let guess = req.match_info().get("word").unwrap_or("");
-    let game = game.lock().unwrap();
-    let solutions = game
-        .solve(trie.get_ref())
-        .into_iter()
-        .collect::<Vec<String>>();
-    let mut guesses = guesses.lock().unwrap();
-    let mut score = score.lock().unwrap();
-    if check_guess(String::from(guess), &solutions)
-        && !&guesses.words.iter().any(|word| word == guess)
-    {
-        *score += score_map[&guess.len()];
-        guesses.words.push(String::from(guess));
-    }
-    let json = lst_to_json(guesses.words.clone(), *score);
-    println!("{:?}", guesses.words);
-    HttpResponse::Ok().body(json)
 }
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let guesses = web::Data::new(Mutex::new(WordList::new()));
-    let solutions = web::Data::new(Mutex::new(WordList::new()));
-    let score = web::Data::new(Mutex::new(0_usize));
-    let score_map: web::Data<HashMap<usize, usize>> =
-        web::Data::new(SCORES.iter().cloned().collect());
-    let game = web::Data::new(Mutex::new(bog::BoggleBoard::new()));
+    let game_state = web::Data::new(Mutex::new(GameState::new()));
     HttpServer::new(move || {
         let tera = Tera::new("templates/**/*.html").unwrap();
         let dictionary = bog::TrieNode::build_trie("./dict/other_word_list.txt");
+        let score_map: HashMap<usize, usize> = SCORES.iter().cloned().collect();
         App::new()
-            .app_data(game.clone())
-            .app_data(guesses.clone())
-            .app_data(score_map.clone())
-            .app_data(solutions.clone())
-            .app_data(score.clone())
+            .app_data(game_state.clone())
             .data(tera)
+            .data(score_map)
             .data(dictionary)
             .route("/", web::get().to(index))
-            .route("/eval_guess/{word}", web::post().to(eval_guess))
+            .route("/eval_guess/{room}/{word}", web::post().to(eval_guess))
             .service(fs::Files::new("/letters", "./templates/letters/").show_files_listing())
             .service(fs::Files::new("/", "./templates/").show_files_listing())
     })
