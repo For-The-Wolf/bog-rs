@@ -2,11 +2,12 @@ use actix_files as fs;
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::iter;
-use std::ops::{Index, IndexMut};
 use std::sync::Mutex;
 use tera::{Context, Tera};
+use actix_rt::time::Instant;
+use std::time::Duration;
 
 mod bog;
 // mod ode_check;
@@ -31,6 +32,7 @@ struct Session {
     solutions: WordList,
     valid_guesses: WordList,
     score: usize,
+    expiration_time: Instant,
 }
 
 impl Session {
@@ -38,11 +40,13 @@ impl Session {
         let board = bog::BoggleBoard::new();
         let solutions = WordList::new();
         let valid_guesses = WordList::new();
+        let expiration_time = Instant::now();
         Session {
             board,
             solutions,
             valid_guesses,
             score: 0,
+            expiration_time,
         }
     }
 }
@@ -67,8 +71,8 @@ impl GameState {
         self.sessions.insert(token.clone(), Session::new());
         token
     }
-    fn forget(&mut self, token: String) -> () {
-        self.sessions.remove(&token);
+    fn forget(&mut self, token: &str) {
+        self.sessions.remove(token);
     }
 }
 
@@ -137,11 +141,11 @@ fn lst_to_json(words: Vec<String>, score: usize) -> String {
 async fn eval_guess(
     req: HttpRequest,
     score_map: web::Data<HashMap<usize, usize>>,
-    game_state: web::Data<Mutex<GameState>>,
+    state: web::Data<Mutex<GameState>>,
 ) -> impl Responder {
-    let guess = req.match_info().get("word").unwrap_or("");
+    let guess = &req.match_info().get("word").unwrap_or("").to_lowercase();
     let session_token = req.match_info().get("room").unwrap_or("");
-    let mut game_state = game_state.lock().unwrap();
+    let mut game_state = state.lock().unwrap();
     if check_guess(
         String::from(guess),
         &game_state.sessions[session_token].solutions.words,
@@ -164,17 +168,30 @@ async fn eval_guess(
     let score = &game_state.sessions[session_token].score;
     let json = lst_to_json(guesses.words.clone(), *score);
     println!("{:?}", guesses.words);
+    game_state.sessions.get_mut(session_token).unwrap().expiration_time = Instant::now() + Duration::from_secs(5*60);
+    actix_rt::spawn(check_cleanup(state.clone(), String::from(session_token)));
     HttpResponse::Ok().body(json)
+}
+
+async fn check_cleanup(state: web::Data<Mutex<GameState>>, token: String){
+    actix_rt::time::delay_for(Duration::from_secs(5*60)).await;
+    let mut game_state = state.lock().unwrap();
+    let expiration_time = game_state.sessions[&token].expiration_time; 
+    if Instant::now() >= expiration_time{
+        game_state.forget(&token);
+        println!("Session {} dropped", &token);
+    }
 }
 
 async fn index(
     tera: web::Data<Tera>,
     trie: web::Data<bog::TrieNode>,
-    game_state: web::Data<Mutex<GameState>>,
+    state: web::Data<Mutex<GameState>>,
 ) -> impl Responder {
     let mut data = Context::new();
-    let mut game_state = game_state.lock().unwrap();
+    let mut game_state = state.lock().unwrap();
     let session_token = game_state.new_session();
+    println!("Session {} created", &session_token);
     data.insert("title", "BogChamp");
     data.insert("rows", &game_state.sessions[&session_token].board.letters);
     let solution_set = game_state.sessions[&session_token]
@@ -193,6 +210,8 @@ async fn index(
     data.insert("session_token", &session_token);
     println!("{:?}", &session_token);
     let rendered = tera.render("index.html", &data).unwrap();
+    game_state.sessions.get_mut(&session_token).unwrap().expiration_time = Instant::now() + Duration::from_secs(5*60);
+    actix_rt::spawn(check_cleanup(state.clone(), session_token));
     HttpResponse::Ok().body(rendered)
 }
 #[actix_web::main]
