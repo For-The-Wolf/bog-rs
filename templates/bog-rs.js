@@ -21,18 +21,33 @@ function update_test()
 			console.log(data);
 			var results = document.getElementById("guesses");
 			delete_children(results);
+			var result_table = document.createElement("table");
+			result_table.className = "center";
+			var count = 0;
 			for (word in data.words) {
+				if (count % 5 == 0){
+					var row = document.createElement("tr");
+				}
+				var column = document.createElement("td");
+				column.style.padding = "20px";
 				var tag = document.createElement("h2");
 				var text = document.createTextNode(data.words[word]);
 				tag.appendChild(text);
-				results.appendChild(tag);
+				column.appendChild(tag);
+				row.appendChild(column);
+				count++;
+				if (count % 5 == 0){
+					result_table.appendChild(row);
+				}
+			result_table.appendChild(row);
+			results.appendChild(result_table);
 			document.getElementById("score_box").innerHTML = "Score - " + data.score;
 			}
 		});
-	textbox.value = '';
-		
+	textbox.value = '';	
+	}
 }
-}
+
 function delete_children(node){
 	while (node.firstChild){
 		node.removeChild(node.lastChild)

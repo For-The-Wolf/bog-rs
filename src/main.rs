@@ -1,17 +1,18 @@
 use actix_files as fs;
+use actix_rt::time::Instant;
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 use std::iter;
+use std::collections::VecDeque;
 use std::sync::Mutex;
-use tera::{Context, Tera};
-use actix_rt::time::Instant;
 use std::time::Duration;
+use tera::{Context, Tera};
 
 mod bog;
 // mod ode_check;
-
+static LIFETIME_SECONDS: u64 = 3*60;
 static SCORES: [(usize, usize); 13] = [
     (4, 2),
     (5, 4),
@@ -41,7 +42,7 @@ impl Session {
         let solutions = WordList::new();
         let valid_guesses = WordList::new();
         let expiration_time = Instant::now();
-        Session {
+        Session { 
             board,
             solutions,
             valid_guesses,
@@ -78,18 +79,18 @@ impl GameState {
 
 #[derive(Debug)]
 struct WordList {
-    words: Vec<String>,
+    words: VecDeque<String>,
 }
 
 impl WordList {
     fn new() -> Self {
-        let words: Vec<String> = Vec::new();
+        let words = VecDeque::<String>::new();
         WordList { words }
     }
 }
-fn format_solutions(solutions: &Vec<String>) -> Vec<Vec<String>> {
+fn format_solutions(solutions: &VecDeque<String>) -> Vec<Vec<String>> {
     let n_columns: usize = 5;
-    let mut sorted = solutions.clone();
+    let mut sorted = Vec::from(solutions.clone().make_contiguous());
     sorted.sort_by_key(|x| std::cmp::Reverse(x.len()));
     let mut formatted: Vec<Vec<String>> = Vec::new();
     for _ in 0..((sorted.len() / n_columns) as f64).ceil() as isize + 1 {
@@ -105,13 +106,13 @@ fn format_solutions(solutions: &Vec<String>) -> Vec<Vec<String>> {
     }
     formatted
 }
-fn check_guess(guess: String, solutions: &Vec<String>) -> bool {
+fn check_guess(guess: String, solutions: &VecDeque<String>) -> bool {
     if solutions.iter().any(|word| word == &guess) {
         return true;
     }
     false
 }
-fn lst_to_json(words: Vec<String>, score: usize) -> String {
+fn lst_to_json(words: VecDeque<String>, score: usize) -> String {
     let mut json = String::from(
         r#"
         {
@@ -162,24 +163,28 @@ async fn eval_guess(
             .unwrap()
             .valid_guesses
             .words
-            .push(String::from(guess));
+            .push_front(String::from(guess));
     }
     let guesses = &game_state.sessions[session_token].valid_guesses;
     let score = &game_state.sessions[session_token].score;
     let json = lst_to_json(guesses.words.clone(), *score);
-    println!("{:?}", guesses.words);
-    game_state.sessions.get_mut(session_token).unwrap().expiration_time = Instant::now() + Duration::from_secs(5*60);
+    game_state
+        .sessions
+        .get_mut(session_token)
+        .unwrap()
+        .expiration_time = Instant::now() + Duration::from_secs(LIFETIME_SECONDS);
     actix_rt::spawn(check_cleanup(state.clone(), String::from(session_token)));
     HttpResponse::Ok().body(json)
 }
 
-async fn check_cleanup(state: web::Data<Mutex<GameState>>, token: String){
-    actix_rt::time::delay_for(Duration::from_secs(5*60)).await;
+async fn check_cleanup(state: web::Data<Mutex<GameState>>, token: String) {
+    actix_rt::time::delay_for(Duration::from_secs(LIFETIME_SECONDS)).await;
     let mut game_state = state.lock().unwrap();
-    let expiration_time = game_state.sessions[&token].expiration_time; 
-    if Instant::now() >= expiration_time{
+    let expiration_time = game_state.sessions[&token].expiration_time;
+    if Instant::now() >= expiration_time {
+        let game = &game_state.sessions[&token];
+        println!(" --Session {} dropped-- \n=====results=====\n Board:\n{}\n Solutions: \n{:#?}\n Correct guesses:\n{:#?}\n Score:\n{} \n=======end=======",&token, &game.board, &game.solutions.words, &game.valid_guesses.words, &game.score);
         game_state.forget(&token);
-        println!("Session {} dropped", &token);
     }
 }
 
@@ -191,13 +196,13 @@ async fn index(
     let mut data = Context::new();
     let mut game_state = state.lock().unwrap();
     let session_token = game_state.new_session();
-    println!("Session {} created", &session_token);
+    println!(" --Session {} created-- ", &session_token);
     data.insert("title", "BogChamp");
     data.insert("rows", &game_state.sessions[&session_token].board.letters);
     let solution_set = game_state.sessions[&session_token]
         .board
         .solve(trie.get_ref());
-    let solutions: Vec<String> = solution_set.into_iter().collect();
+    let solutions: VecDeque<String> = solution_set.into_iter().collect();
     game_state
         .sessions
         .get_mut(&session_token)
@@ -208,9 +213,12 @@ async fn index(
     data.insert("solutions", &sorted);
     data.insert("n_solutions", &solutions.len());
     data.insert("session_token", &session_token);
-    println!("{:?}", &session_token);
     let rendered = tera.render("index.html", &data).unwrap();
-    game_state.sessions.get_mut(&session_token).unwrap().expiration_time = Instant::now() + Duration::from_secs(5*60);
+    game_state
+        .sessions
+        .get_mut(&session_token)
+        .unwrap()
+        .expiration_time = Instant::now() + Duration::from_secs(LIFETIME_SECONDS);
     actix_rt::spawn(check_cleanup(state.clone(), session_token));
     HttpResponse::Ok().body(rendered)
 }
