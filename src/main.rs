@@ -4,15 +4,15 @@ use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::collections::HashMap;
-use std::iter;
 use std::collections::VecDeque;
+use std::iter;
 use std::sync::Mutex;
 use std::time::Duration;
 use tera::{Context, Tera};
 
 mod bog;
 // mod ode_check;
-static LIFETIME_SECONDS: u64 = 3*60;
+static LIFETIME_SECONDS: u64 = 3 * 60;
 static SCORES: [(usize, usize); 13] = [
     (4, 2),
     (5, 4),
@@ -42,7 +42,7 @@ impl Session {
         let solutions = WordList::new();
         let valid_guesses = WordList::new();
         let expiration_time = Instant::now();
-        Session { 
+        Session {
             board,
             solutions,
             valid_guesses,
@@ -147,34 +147,40 @@ async fn eval_guess(
     let guess = &req.match_info().get("word").unwrap_or("").to_lowercase();
     let session_token = req.match_info().get("room").unwrap_or("");
     let mut game_state = state.lock().unwrap();
-    if check_guess(
-        String::from(guess),
-        &game_state.sessions[session_token].solutions.words,
-    ) && !&game_state.sessions[session_token]
-        .valid_guesses
-        .words
-        .iter()
-        .any(|word| word == guess)
-    {
-        game_state.sessions.get_mut(session_token).unwrap().score += score_map[&guess.len()];
+    if let Some(_) = game_state.sessions.get(session_token) {
+        if check_guess(
+            String::from(guess),
+            &game_state.sessions[session_token].solutions.words,
+        ) && !&game_state.sessions[session_token]
+            .valid_guesses
+            .words
+            .iter()
+            .any(|word| word == guess)
+        {
+            game_state.sessions.get_mut(session_token).unwrap().score += score_map[&guess.len()];
+            game_state
+                .sessions
+                .get_mut(session_token)
+                .unwrap()
+                .valid_guesses
+                .words
+                .push_front(String::from(guess));
+        }
+        let guesses = &game_state.sessions[session_token].valid_guesses;
+        let score = &game_state.sessions[session_token].score;
+        let json = lst_to_json(guesses.words.clone(), *score);
         game_state
             .sessions
             .get_mut(session_token)
             .unwrap()
-            .valid_guesses
-            .words
-            .push_front(String::from(guess));
+            .expiration_time = Instant::now() + Duration::from_secs(LIFETIME_SECONDS);
+        actix_rt::spawn(check_cleanup(state.clone(), String::from(session_token)));
+        return HttpResponse::Ok().body(json);
+    } else {
+        return HttpResponse::Ok().body(String::from(
+            r#"{"error":"This session has ended, refresh the page."}"#,
+        ));
     }
-    let guesses = &game_state.sessions[session_token].valid_guesses;
-    let score = &game_state.sessions[session_token].score;
-    let json = lst_to_json(guesses.words.clone(), *score);
-    game_state
-        .sessions
-        .get_mut(session_token)
-        .unwrap()
-        .expiration_time = Instant::now() + Duration::from_secs(LIFETIME_SECONDS);
-    actix_rt::spawn(check_cleanup(state.clone(), String::from(session_token)));
-    HttpResponse::Ok().body(json)
 }
 
 async fn check_cleanup(state: web::Data<Mutex<GameState>>, token: String) {
