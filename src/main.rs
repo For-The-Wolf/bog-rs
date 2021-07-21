@@ -28,69 +28,73 @@ static SCORES: [(usize, usize); 13] = [
     (15, 609),
     (16, 986),
 ];
-struct Session {
-    board: bog::BoggleBoard,
-    solutions: WordList,
-    valid_guesses: WordList,
+
+#[derive(Debug)]
+struct Player {
+    valid_guesses: VecDeque<String>,
     score: usize,
+}
+
+struct Game {
+    board: bog::BoggleBoard,
+    solutions: Vec<String>,
+    found_words: Vec<String>,
+    players: HashMap<String, Player>,
     expiration_time: Instant,
 }
 
-impl Session {
+impl Game {
     fn new() -> Self {
         let board = bog::BoggleBoard::new();
-        let solutions = WordList::new();
-        let valid_guesses = WordList::new();
+        let solutions = Vec::<String>::new();
+        let found_words = Vec::<String>::new();
+        let players = HashMap::<String, Player>::new();
         let expiration_time = Instant::now();
-        Session {
+        Game {
             board,
             solutions,
-            valid_guesses,
-            score: 0,
+            found_words,
+            players,
             expiration_time,
         }
     }
 }
 
 struct GameState {
-    sessions: HashMap<String, Session>,
+    games: HashMap<String, Game>,
 }
 
 impl GameState {
     fn new() -> Self {
         GameState {
-            sessions: HashMap::new(),
+            games: HashMap::<String, Game>::new(),
         }
     }
-    fn new_session(&mut self) -> String {
+    fn new_session_single(&mut self) -> String {
         let mut rng = thread_rng();
         let token: String = iter::repeat(())
             .map(|()| rng.sample(Alphanumeric))
             .map(char::from)
             .take(12)
             .collect();
-        self.sessions.insert(token.clone(), Session::new());
+        self.games.insert(token.clone(), Game::new());
+        self.games.get_mut(&token).unwrap().players.insert(
+            String::from("single_player"),
+            Player {
+                valid_guesses: VecDeque::<String>::new(),
+                score: 0,
+            },
+        );
         token
     }
     fn forget(&mut self, token: &str) {
-        self.sessions.remove(token);
+        self.games.remove(token);
     }
 }
 
-#[derive(Debug)]
-struct WordList {
-    words: VecDeque<String>,
-}
-
-impl WordList {
-    fn new() -> Self {
-        let words = VecDeque::<String>::new();
-        WordList { words }
-    }
-}
-fn format_solutions(solutions: &VecDeque<String>) -> Vec<Vec<String>> {
+fn format_solutions(solutions: &Vec<String>) -> Vec<Vec<String>> {
     let n_columns: usize = 5;
-    let mut sorted = Vec::from(solutions.clone().make_contiguous());
+    let mut sorted = solutions.clone();
     sorted.sort_by_key(|x| std::cmp::Reverse(x.len()));
     let mut formatted: Vec<Vec<String>> = Vec::new();
     for _ in 0..((sorted.len() / n_columns) as f64).ceil() as isize + 1 {
@@ -106,7 +110,7 @@ fn format_solutions(solutions: &VecDeque<String>) -> Vec<Vec<String>> {
     }
     formatted
 }
-fn check_guess(guess: String, solutions: &VecDeque<String>) -> bool {
+fn check_guess(guess: String, solutions: &Vec<String>) -> bool {
     if solutions.iter().any(|word| word == &guess) {
         return true;
     }
@@ -146,31 +150,53 @@ async fn eval_guess(
 ) -> impl Responder {
     let guess = &req.match_info().get("word").unwrap_or("").to_lowercase();
     let session_token = req.match_info().get("room").unwrap_or("");
+    let player_name = req.match_info().get("player").unwrap_or("");
     let mut game_state = state.lock().unwrap();
-    if let Some(_) = game_state.sessions.get(session_token) {
+    if game_state
+        .games
+        .get(session_token)
+        .unwrap()
+        .players
+        .get(player_name)
+        .is_some()
+    {
         if check_guess(
             String::from(guess),
-            &game_state.sessions[session_token].solutions.words,
-        ) && !&game_state.sessions[session_token]
-            .valid_guesses
-            .words
+            &game_state.games[session_token].solutions,
+        ) && !&game_state.games[session_token]
+            .found_words
             .iter()
             .any(|word| word == guess)
         {
-            game_state.sessions.get_mut(session_token).unwrap().score += score_map[&guess.len()];
             game_state
-                .sessions
+                .games
                 .get_mut(session_token)
                 .unwrap()
+                .players
+                .get_mut(player_name)
+                .unwrap()
+                .score += score_map[&guess.len()];
+            game_state
+                .games
+                .get_mut(session_token)
+                .unwrap()
+                .players
+                .get_mut(player_name)
+                .unwrap()
                 .valid_guesses
-                .words
                 .push_front(String::from(guess));
+            game_state
+                .games
+                .get_mut(session_token)
+                .unwrap()
+                .found_words
+                .push(String::from(guess));
         }
-        let guesses = &game_state.sessions[session_token].valid_guesses;
-        let score = &game_state.sessions[session_token].score;
-        let json = lst_to_json(guesses.words.clone(), *score);
+        let guesses = &game_state.games[session_token].players[player_name].valid_guesses;
+        let score = &game_state.games[session_token].players[player_name].score;
+        let json = lst_to_json(guesses.clone(), *score);
         game_state
-            .sessions
+            .games
             .get_mut(session_token)
             .unwrap()
             .expiration_time = Instant::now() + Duration::from_secs(LIFETIME_SECONDS);
@@ -186,10 +212,10 @@ async fn eval_guess(
 async fn check_cleanup(state: web::Data<Mutex<GameState>>, token: String) {
     actix_rt::time::delay_for(Duration::from_secs(LIFETIME_SECONDS)).await;
     let mut game_state = state.lock().unwrap();
-    let expiration_time = game_state.sessions[&token].expiration_time;
+    let expiration_time = game_state.games[&token].expiration_time;
     if Instant::now() >= expiration_time {
-        let game = &game_state.sessions[&token];
-        println!(" --Session {} dropped-- \n=====results=====\n Board:\n{}\n Solutions: \n{:#?}\n Correct guesses:\n{:#?}\n Score:\n{} \n=======end=======",&token, &game.board, &game.solutions.words, &game.valid_guesses.words, &game.score);
+        let game = &game_state.games[&token];
+        println!(" --Session {} dropped-- \n=====results=====\n Board:\n{}\n Solutions: \n{:#?}\n Results:\n{:#?} \n=======end=======",&token, &game.board, &game.solutions, &game.players);
         game_state.forget(&token);
     }
 }
@@ -201,36 +227,27 @@ async fn single_player(
 ) -> impl Responder {
     let mut data = Context::new();
     let mut game_state = state.lock().unwrap();
-    let session_token = game_state.new_session();
+    let session_token = game_state.new_session_single();
     println!(" --Session {} created-- ", &session_token);
     data.insert("title", "BogChamp");
-    data.insert("rows", &game_state.sessions[&session_token].board.letters);
-    let solution_set = game_state.sessions[&session_token]
-        .board
-        .solve(trie.get_ref());
-    let solutions: VecDeque<String> = solution_set.into_iter().collect();
-    game_state
-        .sessions
-        .get_mut(&session_token)
-        .unwrap()
-        .solutions
-        .words = solutions.clone();
+    data.insert("rows", &game_state.games[&session_token].board.letters);
+    let solution_set = game_state.games[&session_token].board.solve(trie.get_ref());
+    let solutions: Vec<String> = solution_set.into_iter().collect();
+    game_state.games.get_mut(&session_token).unwrap().solutions = solutions.clone();
     let sorted = format_solutions(&solutions);
     data.insert("solutions", &sorted);
     data.insert("n_solutions", &solutions.len());
     data.insert("session_token", &session_token);
     let rendered = tera.render("single_player.html", &data).unwrap();
     game_state
-        .sessions
+        .games
         .get_mut(&session_token)
         .unwrap()
         .expiration_time = Instant::now() + Duration::from_secs(LIFETIME_SECONDS);
     actix_rt::spawn(check_cleanup(state.clone(), session_token));
     HttpResponse::Ok().body(rendered)
 }
-async fn index(
-    tera: web::Data<Tera>,
-) -> impl Responder {
+async fn index(tera: web::Data<Tera>) -> impl Responder {
     let mut data = Context::new();
     data.insert("title", "BogChamp");
     let rendered = tera.render("index.html", &data).unwrap();
@@ -250,7 +267,10 @@ async fn main() -> std::io::Result<()> {
             .data(dictionary)
             .route("/", web::get().to(index))
             .route("/single_player", web::get().to(single_player))
-            .route("/eval_guess/{room}/{word}", web::post().to(eval_guess))
+            .route(
+                "/eval_guess/{room}/{player}/{word}",
+                web::post().to(eval_guess),
+            )
             .service(fs::Files::new("/letters", "./templates/letters/"))
             .service(fs::Files::new("/", "./templates/"))
     })

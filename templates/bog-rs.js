@@ -15,7 +15,7 @@ function update_test()
 	console.log(session_token);
 	var word = textbox.value;
 	if (word){
-	fetch("./eval_guess/"+session_token+"/"+word, {method: 'POST'})
+	fetch("./eval_guess/"+session_token+"/single_player/"+word, {method: 'POST'})
 		.then(response => response.json())
 	  .then(data => {
 			console.log(data);
