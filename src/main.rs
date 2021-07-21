@@ -194,7 +194,7 @@ async fn check_cleanup(state: web::Data<Mutex<GameState>>, token: String) {
     }
 }
 
-async fn index(
+async fn single_player(
     tera: web::Data<Tera>,
     trie: web::Data<bog::TrieNode>,
     state: web::Data<Mutex<GameState>>,
@@ -219,13 +219,21 @@ async fn index(
     data.insert("solutions", &sorted);
     data.insert("n_solutions", &solutions.len());
     data.insert("session_token", &session_token);
-    let rendered = tera.render("index.html", &data).unwrap();
+    let rendered = tera.render("single_player.html", &data).unwrap();
     game_state
         .sessions
         .get_mut(&session_token)
         .unwrap()
         .expiration_time = Instant::now() + Duration::from_secs(LIFETIME_SECONDS);
     actix_rt::spawn(check_cleanup(state.clone(), session_token));
+    HttpResponse::Ok().body(rendered)
+}
+async fn index(
+    tera: web::Data<Tera>,
+) -> impl Responder {
+    let mut data = Context::new();
+    data.insert("title", "BogChamp");
+    let rendered = tera.render("index.html", &data).unwrap();
     HttpResponse::Ok().body(rendered)
 }
 #[actix_web::main]
@@ -241,9 +249,10 @@ async fn main() -> std::io::Result<()> {
             .data(score_map)
             .data(dictionary)
             .route("/", web::get().to(index))
+            .route("/single_player", web::get().to(single_player))
             .route("/eval_guess/{room}/{word}", web::post().to(eval_guess))
-            .service(fs::Files::new("/letters", "./templates/letters/").show_files_listing())
-            .service(fs::Files::new("/", "./templates/").show_files_listing())
+            .service(fs::Files::new("/letters", "./templates/letters/"))
+            .service(fs::Files::new("/", "./templates/"))
     })
     .bind("127.0.0.1:8080")?
     .run()
