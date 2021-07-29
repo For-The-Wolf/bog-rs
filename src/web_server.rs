@@ -311,4 +311,3 @@ fn format_solutions(solutions: &[String]) -> Vec<Vec<String>> {
     }
     formatted
 }
-
