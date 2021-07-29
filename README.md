@@ -10,5 +10,6 @@ Includes:
 ![BogChamp](https://github.com/For-The-Wolf/bog-rs/blob/master/readme_images/boggers.png)
 
 ## To do
- - Fix shared state across multiple sessions
- - Multiplayer rooms
+ - [x] Fix shared state across multiple sessions
+ - [x] Multiplayer rooms - Play now at [BogChamp.io/beta](https://bogchamp.io/beta)
+ - [ ] Multiplayer stable release (inc. pretty UI)
