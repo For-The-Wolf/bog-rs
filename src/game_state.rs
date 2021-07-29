@@ -96,16 +96,21 @@ impl Game {
         player_token
     }
     pub fn activate(&mut self, trie: &bog::TrieNode, button_state: &responses::ButtonState) {
-        match button_state {
-            responses::ButtonState::Inactive => {
-                self.status = GameStatus::InProgress;
-                self.board._randomise();
-                self.solutions = self.board.solve(trie).iter().cloned().collect();
-                self.start_time = Instant::now();
-                for player in self.players.values_mut() {
-                    player.valid_guesses = VecDeque::new();
+        match self.status{
+            GameStatus::InLobby => {
+                match button_state {
+                    responses::ButtonState::Inactive => {
+                        self.status = GameStatus::InProgress;
+                        self.board._randomise();
+                        self.solutions = self.board.solve(trie).iter().cloned().collect();
+                        self.start_time = Instant::now();
+                        for player in self.players.values_mut() {
+                            player.valid_guesses = VecDeque::new();
+                        }
+                    }
+                    _ => (),
                 }
-            }
+            },
             _ => (),
         }
     }
