@@ -1,10 +1,10 @@
-use std::iter;
-use std::collections::HashMap;
-use std::collections::VecDeque;
+use crate::responses;
+use actix_rt::time::Instant;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use actix_rt::time::Instant;
-use crate::responses;
+use std::collections::HashMap;
+use std::collections::VecDeque;
+use std::iter;
 
 use super::bog;
 
@@ -25,19 +25,19 @@ pub static SCORES: [(usize, usize); 13] = [
 ];
 
 #[derive(PartialEq, Eq)]
-pub enum GameStatus{
+pub enum GameStatus {
     InLobby,
     InProgress,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Found{
+pub enum Found {
     Once,
     Twice,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Guess{
+pub struct Guess {
     pub word: String,
     pub found: Found,
 }
@@ -85,20 +85,27 @@ impl Game {
     }
     pub fn new_player(&mut self, player_name: String) -> String {
         let player_token = GameState::generate_token();
-        self.players.insert(player_token.clone(), Player{name:player_name, valid_guesses: VecDeque::<Guess>::new(), score: 0});
+        self.players.insert(
+            player_token.clone(),
+            Player {
+                name: player_name,
+                valid_guesses: VecDeque::<Guess>::new(),
+                score: 0,
+            },
+        );
         player_token
     }
-    pub fn activate(&mut self, trie: &bog::TrieNode, button_state: &responses::ButtonState){
+    pub fn activate(&mut self, trie: &bog::TrieNode, button_state: &responses::ButtonState) {
         match button_state {
             responses::ButtonState::Inactive => {
                 self.status = GameStatus::InProgress;
                 self.board._randomise();
                 self.solutions = self.board.solve(trie).iter().cloned().collect();
                 self.start_time = Instant::now();
-                for player in self.players.values_mut(){
+                for player in self.players.values_mut() {
                     player.valid_guesses = VecDeque::new();
                 }
-            },
+            }
             _ => (),
         }
     }
@@ -125,10 +132,11 @@ impl GameState {
     }
     pub fn new_session_single(&mut self) -> String {
         let mut room_id = Self::generate_token();
-        while self.games.keys().any(|id| &room_id == id){
+        while self.games.keys().any(|id| &room_id == id) {
             room_id = Self::generate_token();
         }
-        self.games.insert(room_id.clone(), Game::new(String::from("single_player")));
+        self.games
+            .insert(room_id.clone(), Game::new(String::from("single_player")));
         self.games.get_mut(&room_id).unwrap().players.insert(
             String::from("single_player"),
             Player {
@@ -141,13 +149,13 @@ impl GameState {
     }
     pub fn new_session_multi(&mut self, room_name: String) -> String {
         let mut room_id = Self::generate_token();
-        while self.games.keys().any(|id| &room_id == id){
+        while self.games.keys().any(|id| &room_id == id) {
             room_id = Self::generate_token();
         }
         self.games.insert(room_id.clone(), Game::new(room_name));
         room_id
     }
-    pub fn forget(&mut self, room_id: String){
+    pub fn forget(&mut self, room_id: String) {
         self.games.remove(&room_id);
     }
 }
