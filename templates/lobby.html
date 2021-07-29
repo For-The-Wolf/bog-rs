@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<script type="text/javascript">
+	var intervalId = window.setInterval( () => poll_lobby(), 500);
+</script>
+<div id="player_id" style="display:None">{{player_id}}</div>
+<br>
+<h1>{{room_name}}</h1>
+<h3>Password:</h3>
+<h2 id="password">{{room_id}}</h2>
+
+<input type="image" src="/letters/start.png" style="width:282px" id="start" value="Begin game" onclick='and_then_deactivate("start");'>
+<br/>
+	<table class="center" id="player_table">
+		<tr>
+			<th style="padding:50px">
+				<h1> PLAYERS </h1>
+			</th>
+			<th style="padding:50px">
+				<h1> SCORES </h1>
+			</th>
+		</tr>
+		<tr>
+			<td>
+				<div id="player_list">
+				</div>
+			</td>
+			<td>
+				<div id="score_list">
+				</div>
+			</td>
+		</tr>
+	</table>
+
+{% endblock %}

@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-<div id="super_secret_session_store" style="display:none">{{session_token}}</div>
-<input type="image" src="letters/start.png" style="width:282px" id="start" value="Start Game!"  onclick='start_timer(); reveal("game");and_then_deactivate("start")'>
+<div id="room_id" style="display:none">{{session_token}}</div>
+<div id="player_id" style="display:none">single_player</div>
+<input type="image" src="letters/start.png" style="width:282px" id="start" value="Start Game!"  onclick='start_timer(); reveal("game");and_then_deactivate("start");focus_on("eval_answer")'>
 <div id="game" style="display:none;">
     <table class="center" style="width:564px;">
         <caption>
@@ -19,7 +20,7 @@
         </tr>
         {% endfor %}
     </table>
-    <form id="submit_form" onsubmit="update_test();return false">
+    <form id="submit_form" onsubmit="check_guess();return false">
         <h2>Solutions</h2>
         <input type="text" id="eval_answer" autocomplete="off" placeholder="Guess word...">
         <input type="submit" value="">

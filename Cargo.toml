@@ -12,7 +12,11 @@ futures="0.3"
 actix-web = "3"
 actix-files = "*"
 actix-rt = "*"
+actix-web-actors = "3"
+actix = "0.10.0"
+uuid = {version = "0.8", features = ["v4", "serde"]}
 tera = "1.5.0"
 reqwest = {version = "*", features = ["blocking"]}
 serde_json = "1.0"
 serde = "*"
+dashmap="4.0.2"

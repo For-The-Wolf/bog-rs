@@ -5,9 +5,25 @@
 	<a href="./single_player">single-player</a>
 </div>
 <div>
-	<a href="./multiplayer">multi-player: create room</a>
+    <input type="button" value ="multi-player: create room" onclick='reveal("create_room");select("create_room_name");'>
+	<div id="create_room" style="display:None;" >
+    <form id="create_room_form" action="#" onsubmit="create_lobby();return false">
+        <h2>Create room</h2>
+        <input pattern="[a-zA-Z0-9 ]+" type="text" id="create_room_player_name" autocomplete="off" placeholder="Create username..." required pattern="[a-zA-Z0-9 ]+">
+        <input type="text" id="create_room_name" autocomplete="off" placeholder="Create room name..." required pattern="[a-zA-Z0-9 ]+">
+        <input type="submit" value="">
+    </form>
+	</div>
 </div>
 <div>
-	<a href="./multiplayer">multi-player: join room</a>
+	<input type="button" value ="multi-player: join room" onclick='reveal("join_room")'>
+	<div id="join_room" style="display:None;">
+    <form id="join_room_form" action="#" onsubmit="join_lobby(); return false">
+        <h2>Join room</h2>
+        <input type="text" id="join_room_player_name" autocomplete="off" placeholder="Create username..." required pattern="[a-zA-Z0-9 ]+">
+        <input type="text" id="join_room_id" autocomplete="off" placeholder="Room password..." required pattern="[a-zA-Z0-9 ]+">
+        <input type="submit" value="">
+    </form>
+	</div>
 </div>
 {% endblock %}
