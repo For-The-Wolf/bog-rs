@@ -10,6 +10,7 @@ Includes:
 ![BogChamp](https://github.com/For-The-Wolf/bog-rs/blob/master/readme_images/boggers.png)
 
 ## To do
- - [x] Fix shared state across multiple sessions
- - [x] Multiplayer rooms - Play now at [BogChamp.io/beta](https://bogchamp.io/beta)
- - [ ] Multiplayer stable release (inc. pretty UI)
+ - [x] Fix shared state across multiple sessions.
+ - [x] Multiplayer rooms - Play now at [BogChamp.io/beta](https://bogchamp.io/beta).
+ - [ ] Multiplayer stable release (inc. pretty UI).
+ - [ ] Update server to store state in concurrent hashmap (`DashMap< >`) rather than `Mutex<HashMap< >>`.
