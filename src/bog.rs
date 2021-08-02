@@ -79,7 +79,7 @@ impl BoggleBoard {
             letters: rand_chars(),
         }
     }
-    pub fn _randomise(&mut self) {
+    pub fn randomise(&mut self) {
         self.letters = rand_chars();
     }
 

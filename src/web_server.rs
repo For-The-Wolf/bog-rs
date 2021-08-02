@@ -227,6 +227,7 @@ pub async fn multi_player(
 pub async fn lobby(
     req: HttpRequest,
     tera: web::Data<Tera>,
+    trie: web::Data<bog::TrieNode>,
     state: web::Data<Arc<Mutex<game_state::GameState>>>,
 ) -> impl Responder {
     let room_id = req.match_info().get("room_id").unwrap();
@@ -249,11 +250,18 @@ pub async fn lobby(
     };
     let room_name = &room.name;
     let player_name = &player.name;
+    let solution_set = room.board.solve(trie.get_ref());
+    let solutions: Vec<String> = solution_set.into_iter().collect();
+    room.solutions = solutions.clone();
+    let sorted = format_solutions(&solutions);
     data.insert("title", &format!("BogChamp: {}", room_name));
     data.insert("room_name", room_name);
     data.insert("room_id", room_id);
     data.insert("player_id", player_id);
     data.insert("player_name", player_name);
+    data.insert("rows", &room.board.letters);
+    data.insert("solutions", &sorted);
+    data.insert("n_solutions", &solutions.len());
     let rendered = tera.render("lobby.html", &data).unwrap();
     HttpResponse::Ok().body(rendered)
 }

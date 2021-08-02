@@ -2,28 +2,43 @@
 
 {% block content %}
 <div>
-	<a href="/beta/single_player">single-player</a>
+  <input type="image" src="/images/buttons/single.png" style="width:282px" value ="single-player" id="single" onclick='and_then_deactivate("single"); window.location.href="/single_player"'>
 </div>
 <div>
-    <input type="button" value ="multi-player: create room" onclick='reveal("create_room");select("create_room_name");'>
+    <input type="image" src="/images/buttons/multi_create.png" style="width:282px" value ="multi-player: create room" id="multi_create" onclick='toggle_pressed("multi_create");reveal("create_room"); focus_on("create_room_player_name")'>
 	<div id="create_room" style="display:None;" >
     <form id="create_room_form" action="#" onsubmit="create_lobby();return false">
         <h2>Create room</h2>
         <input pattern="[a-zA-Z0-9 ]+" type="text" id="create_room_player_name" autocomplete="off" placeholder="Create username..." required pattern="[a-zA-Z0-9 ]+">
+        <br>
         <input type="text" id="create_room_name" autocomplete="off" placeholder="Create room name..." required pattern="[a-zA-Z0-9 ]+">
-        <input type="submit" value="">
+        <input type="submit" value="" style="position: absolute; left: -9999px; width: 1px; height: 1px;" tabindex="-1">
     </form>
 	</div>
 </div>
 <div>
-	<input type="button" value ="multi-player: join room" onclick='reveal("join_room")'>
+    <input type="image" src="/images/buttons/multi_join.png" style="width:282px;" value="multi-player: join room" id="multi_join" onclick='toggle_pressed("multi_join"); reveal("join_room"); focus_on("join_room_player_name")'>
 	<div id="join_room" style="display:None;">
     <form id="join_room_form" action="#" onsubmit="join_lobby(); return false">
         <h2>Join room</h2>
         <input type="text" id="join_room_player_name" autocomplete="off" placeholder="Create username..." required pattern="[a-zA-Z0-9 ]+">
+        <br>
         <input type="text" id="join_room_id" autocomplete="off" placeholder="Room password..." required pattern="[a-zA-Z0-9 ]+">
-        <input type="submit" value="">
+        <input type="submit" value="" style="position: absolute; left: -9999px; width: 1px; height: 1px;" tabindex="-1">
     </form>
 	</div>
+  <div>
+      <input type="image" src="/images/buttons/rules.png" style="width:282px" value="Rules" id="rules" onclick='toggle_pressed("rules");reveal("display_rules")'>
+      <div id="display_rules" style="display:None;">
+          <h2><u>Rules</u></h2>
+          <p class="center">Find unique words, score points. </br></br>
+          Valid words can be conencted directly or diagonally, eg:</p>
+          <img src="/images/example.png" style='width:400px;'>
+          <p class="center">If multiple players find the same word, this word is crossed off and <u> no-one </u> scores these points!</br></br>
+          The longer the word, the more points you score. </br></br>
+          Words must be at least 4 letters long to score any points at all!</p>
+          <img src="/images/score.png" style='width:650px;'>
+      </div>
+  </div>
 </div>
 {% endblock %}

@@ -18,7 +18,7 @@
 	<tr>
 		{% for letter in row %}
 			<td style="text-align:center;padding:0px;">
-				<img src="/letters/{{letter}}.png" style="width:128px;height:128px;">
+				<img src="/images/letters/{{letter}}.png" style="width:128px;height:128px;">
 			</td>
 			{% endfor %}
 	</tr>
@@ -26,7 +26,7 @@
 </table>
 <form id="submit_form" action="#" onsubmit="check_guess(); return false">
 	<h2>Solutions</h2>
-	<input type="text" id="eval_answer" autocomplete="off" placeholder="Guess word..">
+	<input type="text" id="eval_answer" autocomplete="off" placeholder="Guess word.." autofocus>
 	<input type="submit" value="">
 </form>
 <div id="guesses">

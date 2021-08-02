@@ -42,7 +42,7 @@ pub struct Guess {
     pub found: Found,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Player {
     pub name: String,
     pub valid_guesses: VecDeque<Guess>,
@@ -59,6 +59,7 @@ pub struct Game {
     pub start_time: Instant,
     pub expiration_time: Instant,
     pub status: GameStatus,
+    pub game_number: usize,
 }
 
 impl Game {
@@ -71,6 +72,7 @@ impl Game {
         let start_time = Instant::now();
         let expiration_time = Instant::now();
         let status = GameStatus::InLobby;
+        let game_number = 0;
         Game {
             board,
             name,
@@ -81,6 +83,7 @@ impl Game {
             start_time,
             expiration_time,
             status,
+            game_number,
         }
     }
     pub fn new_player(&mut self, player_name: String) -> String {
@@ -96,20 +99,19 @@ impl Game {
         player_token
     }
     pub fn activate(&mut self, trie: &bog::TrieNode, button_state: &responses::ButtonState) {
-        match self.status{
-            GameStatus::InLobby => {
-                match button_state {
-                    responses::ButtonState::Inactive => {
-                        self.status = GameStatus::InProgress;
-                        self.board._randomise();
-                        self.solutions = self.board.solve(trie).iter().cloned().collect();
-                        self.start_time = Instant::now();
-                        for player in self.players.values_mut() {
-                            player.valid_guesses = VecDeque::new();
-                        }
+        match self.status {
+            GameStatus::InLobby => match button_state {
+                responses::ButtonState::Inactive => {
+                    self.status = GameStatus::InProgress;
+                    self.game_number += 1;
+                    self.board.randomise();
+                    self.solutions = self.board.solve(trie).iter().cloned().collect();
+                    self.start_time = Instant::now();
+                    for player in self.players.values_mut() {
+                        player.valid_guesses = VecDeque::new();
                     }
-                    _ => (),
                 }
+                _ => (),
             },
             _ => (),
         }
