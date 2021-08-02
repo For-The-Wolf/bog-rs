@@ -57,7 +57,7 @@ impl FromRequest for BoggleBoard {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TrieNode {
     value: Option<String>,
     children: HashMap<char, TrieNode>,
@@ -83,47 +83,70 @@ impl BoggleBoard {
         self.letters = rand_chars();
     }
 
-    fn depth_first_search(
-        //visited: &Vec<(usize, usize)>,
-        visited: &[(usize, usize)],
-        board: &BoggleBoard,
-        current_location: &(usize, usize),
-        letters: &[char],
-        node: &TrieNode,
-        found_words: &mut Vec<String>,
-    ) {
-        let mut new_visited = visited.to_owned();
-        new_visited.push(*current_location);
-        let current_letter = board.extract(*current_location);
-        let mut new_letters = letters.to_owned();
-        new_letters.push(current_letter);
-        if new_letters.len() > 3 {
-            if let Some(word) = &node.value {
-                found_words.push(word.clone());
+    pub fn solve(&self, trie: &TrieNode) -> HashSet<String> {
+        let mut words: Vec<String> = Vec::new();
+        for x in 0..4 {
+            for y in 0..4 {
+                self.dfs2(trie, (x,y).clone(), Vec::new(), Vec::new(),&mut words);
             }
         }
-        let visited_set: HashSet<(usize, usize)> = new_visited.iter().cloned().collect();
-        let neighbour_set: HashSet<(usize, usize)> = BoggleBoard::adjacent(*current_location)
+        words.into_iter().collect()
+    }
+
+    fn dfs2(
+        &self,
+        trie: &TrieNode,
+        current_location: (usize, usize),
+        visited_locations: Vec<(usize, usize)>,
+        found_letters: Vec<char>,
+        found_words: &mut Vec<String>,
+    ) {
+        let current_letter = self.extract(&current_location);
+        let mut found_letters = found_letters.clone();
+        let trie = if let Some(trie) = trie.children.get(&current_letter){
+            found_letters.push(current_letter.clone());
+            trie
+        } else {
+            return;
+        };
+        let trie = {
+            if current_letter == 'q'{
+                let trie = if let Some(trie) = trie.children.get(&'u'){
+                    found_letters.push('u');
+                    trie
+                }else{
+                    return;
+                };
+                trie
+            }else{
+                trie
+            }
+        };
+        if let Some(word) = &trie.value{
+            found_words.push(word.clone());
+        }
+        let mut visited_locations = visited_locations.clone();
+        visited_locations.push(current_location.clone());
+        let visited_set: HashSet<(usize, usize)> = visited_locations.iter().cloned().collect();
+        let neighbour_set: HashSet<(usize, usize)> = BoggleBoard::adjacent(&current_location)
             .iter()
             .cloned()
             .collect();
+
         for coord in neighbour_set.difference(&visited_set) {
-            let next_letter = &board.extract(*coord);
-            if node.children.keys().any(|key| key == next_letter) {
-                BoggleBoard::depth_first_search(
-                    &new_visited,
-                    &board,
-                    coord,
-                    &new_letters,
-                    node.children.get(&next_letter).unwrap(),
-                    found_words,
-                );
-            }
+            self.dfs2(
+                &trie,
+                coord.clone(),
+                visited_locations.clone(),
+                found_letters.clone(),
+                found_words
+            )
         }
     }
 
-    fn adjacent(coord: (usize, usize)) -> Vec<(usize, usize)> {
-        let (x, y) = coord;
+
+    fn adjacent(coord: &(usize, usize)) -> Vec<(usize, usize)> {
+        let (x, y) = coord.clone();
         let mut neighbours: Vec<(usize, usize)> = Vec::new();
         for xn in 0..=2 {
             for yn in 0..=2 {
@@ -141,25 +164,9 @@ impl BoggleBoard {
         }
         neighbours
     }
-    fn extract(&self, coord: (usize, usize)) -> char {
-        let (x, y) = coord;
-        self.letters[x][y]
-    }
-    pub fn solve(&self, trie: &TrieNode) -> HashSet<String> {
-        let mut words: Vec<String> = Vec::new();
-        for x in 0..4 {
-            for y in 0..4 {
-                BoggleBoard::depth_first_search(
-                    &Vec::new(),
-                    self,
-                    &(x, y),
-                    &Vec::new(),
-                    trie,
-                    &mut words,
-                );
-            }
-        }
-        words.into_iter().collect()
+    fn extract(&self, coord: &(usize, usize)) -> char {
+        let (x, y) = coord.clone();
+        self.letters[x][y].clone()
     }
 }
 impl TrieNode {
@@ -194,7 +201,7 @@ impl TrieNode {
     }
 
     fn _find(&self, mut letters: VecDeque<char>) -> Option<String> {
-        if let Some(letter) = letters.pop_back() {
+        if let Some(letter) = letters.pop_front() {
             if self.children.keys().any(|key| key == &letter) {
                 self.children.get(&letter).unwrap()._find(letters)
             } else {
@@ -206,7 +213,7 @@ impl TrieNode {
     }
 
     fn insert(&mut self, mut letters: VecDeque<char>, word: String) {
-        if let Some(letter) = letters.pop_back() {
+        if let Some(letter) = letters.pop_front() {
             if !self.children.keys().any(|key| key == &letter) {
                 self.children.insert(letter, TrieNode::new());
             }

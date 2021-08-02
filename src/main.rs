@@ -11,6 +11,36 @@ mod responses;
 mod web_server;
 // mod ode_check;
 
+#[cfg(test)]
+mod tests {
+    use crate::bog::{BoggleBoard, TrieNode};
+
+    #[test]
+    fn test_qu() {
+        let letters = Vec::from([
+            Vec::from(['e', 'q', 'i', 'a']),
+            Vec::from(['e', 'r', 'r', 'b']),
+            Vec::from(['n', 'x', 'e', 'c']),
+            Vec::from(['a', 'z', 'u', 'd']),
+        ]);
+        let test_board = BoggleBoard { letters };
+        let trie = TrieNode::build_trie("./dict/other_word_list.txt");
+        let solutions = test_board.solve(&trie);
+        println!("{:?}", solutions);
+        assert!(
+            solutions.iter().any(|word| word == "require")
+                && solutions.iter().any(|word| word == "queen")
+        )
+    }
+    #[test]
+    fn test_trie(){
+        let trie = TrieNode::build_trie("./dict/other_word_list.txt");
+        assert!(trie._find_word(String::from("require")).is_some()); 
+        assert!(trie._find_word(String::from("robe")).is_some()) ;
+    }
+}
+
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let game_state = web::Data::new(Arc::new(Mutex::new(game_state::GameState::new())));
