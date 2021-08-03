@@ -1,5 +1,5 @@
 # bog-rs
-BogChamp: word game web-app written in rust.
+BogChamp: a multi-player word game web-app written in rust.
 
 Play now at [BogChamp.io](https://bogchamp.io)
 
@@ -11,6 +11,7 @@ Includes:
 
 ## To do
  - [x] Fix shared state across multiple sessions.
- - [x] Multiplayer rooms - Play now at [BogChamp.io/beta](https://bogchamp.io/beta).
- - [ ] Multiplayer stable release (inc. pretty UI).
+ - [x] Multiplayer beta (rooms, real-time scoring, synchronised timing, etc.).
+ - [x] Multiplayer stable release (inc. pretty UI).
  - [ ] Update server to store state in concurrent hashmap (`DashMap< >`) rather than `Mutex<HashMap< >>`.
+ - [ ] Use `actix_actors::ws` for Websockets
