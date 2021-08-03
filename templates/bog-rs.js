@@ -47,10 +47,9 @@ function is_first(){
 
 function poll_lobby() {
 	var params = window.location.href.split("/");
-  var room_id = document.getElementById("password").innerHTML;
+  var room_id = params[params.length-2];//document.getElementById("password").innerHTML;
   var player_id = document.getElementById("player_id").innerHTML;
-  var player_list = document.getElementById("player_list");
-  var score_list = document.getElementById("score_list");
+  var player_list = document.getElementById("player_table");
   if (!document.getElementById("start").disabled) {
     var button_state = "Active";
   } else {
@@ -63,21 +62,23 @@ function poll_lobby() {
       if (data.status) {
         window.location.href = "/multi_player/" + room_id + "/" + player_id
       }
-      delete_children(player_list);
-      delete_children(score_list);
+       delete_children(player_list);
       var sorted_players = data.player_list;
       sorted_players.sort((a, b) => {
         return b.score - a.score
       });
       for (idx in sorted_players) {
+        var row = document.createElement("tr")
         var player = sorted_players[idx];
-        var div = document.createElement("div");
+        var div = document.createElement("td");
+        div.width = "50%"
         var h2 = document.createElement("h2");
         var name = document.createTextNode(player.name);
         h2.appendChild(name);
         div.appendChild(h2);
-        player_list.appendChild(div);
-        var div_score = document.createElement("div");
+        row.appendChild(div);
+        var div_score = document.createElement("td");
+        div.width = "50%"
         var h2_score = document.createElement("h2");
         var score = document.createTextNode(player.score);
         h2_score.appendChild(score);
@@ -92,7 +93,8 @@ function poll_lobby() {
           h2_words.appendChild(words)
           div_score.appendChild(h2_words);
         }
-        score_list.appendChild(div_score);
+        row.appendChild(div_score);
+        player_list.appendChild(row);
       }
     })
 }
