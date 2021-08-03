@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<script type="text/javascript">
+	var intervalId = window.setInterval( () => poll_lobby(), 500);
+</script>
+	<div id="player_id" style="display:None">{{player_id}}</div>
+	<br>
+
+	<table class="center" id="player_table">
+		<caption>
+			<h1>{{room_name}}</h1>
+			<h3>Password:</h3>
+			<h2 id="password">{{room_id}}</h2>
+			<input type="image" src="/images/buttons/start.png" style="width:282px" id="start" value="Begin game" onclick='and_then_deactivate("start");'>
+		</caption>
+		<tr>
+			<th style="padding-right:50px">
+				<h1> PLAYERS </h1>
+			</th>
+			<th style="padding-left:50px">
+				<h1> SCORES </h1>
+			</th>
+		</tr>
+		<tr>
+			<td style="padding-right:50px">
+				<div id="player_list">
+				</div>
+			</td>
+			<td style="padding-left:50px">
+				<div id="score_list">
+				</div>
+			</td>
+		</tr>
+	</table>
+	<div id="game_results" style="display:none">
+		<table class="center" style="width:564px;">
+				{% for row in rows %}
+				<tr>
+						{% for letter in row %}
+						<td style="text-align:center;padding:0px;">
+								<img src="/images/letters/{{letter}}.png" style="width:128px;height:128px;">
+						</td>
+						{% endfor %}
+				</tr>
+				{% endfor %}
+		</table>
+		<div id="solution_zone">
+				<div id="result_list">
+						<table class="center">
+								<caption>
+										<h2> ({{n_solutions}} solutions): </h2>
+								</caption>
+								{% for solution_set in solutions %}
+								<tr>
+										{% for solution in solution_set %}
+										<td style="padding:20px;">
+												<h2>
+														{{solution}}
+												</h2>
+										</td>
+										{% endfor %}
+								</tr>
+								{% endfor %}
+						</table>
+				</div>
+		</div>
+	</div>
+</div>
+<script>
+	is_first();
+	poll_lobby();
+</script>
+{% endblock %}

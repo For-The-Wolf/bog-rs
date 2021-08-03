@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="room_id" style="display:none">{{session_token}}</div>
+<div id="player_id" style="display:none">single_player</div>
+<input type="image" src="/images/buttons/start.png" style="width:282px" id="start" value="Start Game!"  onclick='and_then_deactivate("start");start_timer(); reveal("game");focus_on("eval_answer")'>
+<div id="game" style="display:none;">
+    <table class="center" style="width:564px;">
+        <caption>
+            <input type="image" src="/images/buttons/new.png" style="width:282px" id="new" value=" New Game " onClick='and_then_deactivate("new");window.location.reload()'>
+            <h1 id="score_box">Score - 0</h1>
+            <h2 id="timery"></h2>
+        </caption>
+        {% for row in rows %}
+        <tr>
+            {% for letter in row %}
+            <td style="text-align:center;padding:0px;">
+                <img src="/images/letters/{{letter}}.png" style="width:128px;height:128px;">
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    <form id="submit_form" onsubmit="check_guess();return false">
+        <h2>Solutions</h2>
+        <input type="text" id="eval_answer" autocomplete="off" placeholder="Guess word...">
+        <input type="submit" value="">
+    </form>
+    <div id="guesses">
+    </div>
+    <div id="solution_zone" style="display:none;">
+        <input type="image" src="/images/buttons/solutions.png" style="width:282px;" id="solutions" value="Reveal solutions" onclick='reveal("result_list");and_then_deactivate("solutions")'>
+        <div id="result_list", style="display:none">
+            <table class="center">
+                <caption>
+                    <h2> ({{n_solutions}} found): </h2>
+                </caption>
+                {% for solution_set in solutions %}
+                <tr>
+                    {% for solution in solution_set %}
+                    <td style="padding:20px;">
+                        <h2>
+                            {{solution}}
+                        </h2>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
