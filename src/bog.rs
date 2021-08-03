@@ -87,7 +87,7 @@ impl BoggleBoard {
         let mut words: Vec<String> = Vec::new();
         for x in 0..4 {
             for y in 0..4 {
-                self.dfs2(trie, (x,y).clone(), Vec::new(), Vec::new(),&mut words);
+                self.dfs2(trie, (x, y).clone(), Vec::new(), Vec::new(), &mut words);
             }
         }
         words.into_iter().collect()
@@ -103,26 +103,26 @@ impl BoggleBoard {
     ) {
         let current_letter = self.extract(&current_location);
         let mut found_letters = found_letters.clone();
-        let trie = if let Some(trie) = trie.children.get(&current_letter){
+        let trie = if let Some(trie) = trie.children.get(&current_letter) {
             found_letters.push(current_letter.clone());
             trie
         } else {
             return;
         };
         let trie = {
-            if current_letter == 'q'{
-                let trie = if let Some(trie) = trie.children.get(&'u'){
+            if current_letter == 'q' {
+                let trie = if let Some(trie) = trie.children.get(&'u') {
                     found_letters.push('u');
                     trie
-                }else{
+                } else {
                     return;
                 };
                 trie
-            }else{
+            } else {
                 trie
             }
         };
-        if let Some(word) = &trie.value{
+        if let Some(word) = &trie.value {
             found_words.push(word.clone());
         }
         let mut visited_locations = visited_locations.clone();
@@ -139,11 +139,10 @@ impl BoggleBoard {
                 coord.clone(),
                 visited_locations.clone(),
                 found_letters.clone(),
-                found_words
+                found_words,
             )
         }
     }
-
 
     fn adjacent(coord: &(usize, usize)) -> Vec<(usize, usize)> {
         let (x, y) = coord.clone();

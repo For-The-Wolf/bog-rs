@@ -33,13 +33,12 @@ mod tests {
         )
     }
     #[test]
-    fn test_trie(){
+    fn test_trie() {
         let trie = TrieNode::build_trie("./dict/other_word_list.txt");
-        assert!(trie._find_word(String::from("require")).is_some()); 
-        assert!(trie._find_word(String::from("robe")).is_some()) ;
+        assert!(trie._find_word(String::from("require")).is_some());
+        assert!(trie._find_word(String::from("robe")).is_some());
     }
 }
-
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
