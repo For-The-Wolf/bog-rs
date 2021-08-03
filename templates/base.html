@@ -7,19 +7,22 @@
         <link href="/bog-rs.css" rel="stylesheet" type="text/css"/>
         <link rel="shortcut icon" href="/favicon.ico"/>
     </head>
-    <body>
-        <div style="text-align:center;color:#073642">
-            <div id="title">
-                <form>
-                    <input type="image" formaction="/" src="/images/buttons/title.png" style="width:564px;">
-                </form>
-            </div>
-            <h3>absolutely bog-rs m8</h3>
-            {% block content %}
-            {% endblock %}
-        </div>
-        <div class="bottom">
-            BogChamp and bog-rs are open-source and available at <a href="https://github.com/For-The-Wolf/bog-rs">https://github.com/For-The-Wolf/bog-rs</a>
+<body>
+    <div id="title" class="header">
+    <form>
+        <input type="image" formaction="/" src="/images/buttons/title.png" style="width:564px;">
+        </form>
+        <h3>absolutely bog-rs m8</h3>
+    </div>
+    <div class="main">
+        {% block content %}
+        {% endblock %}
+    </div>
+    <div class="footer">
+        </br>
+            </br>
+            BogChamp and bog-rs are open-source and available at </br>
+            <a href="https://github.com/For-The-Wolf/bog-rs">https://github.com/For-The-Wolf/bog-rs</a>
         </div>
     </body>
 </html>

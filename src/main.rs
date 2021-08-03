@@ -2,7 +2,6 @@ use actix_files as fs;
 use actix_web::{web, App, HttpServer};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::Mutex;
 use tera::Tera;
 
 mod bog;
@@ -26,7 +25,6 @@ mod tests {
         let test_board = BoggleBoard { letters };
         let trie = TrieNode::build_trie("./dict/other_word_list.txt");
         let solutions = test_board.solve(&trie);
-        println!("{:?}", solutions);
         assert!(
             solutions.iter().any(|word| word == "require")
                 && solutions.iter().any(|word| word == "queen")
@@ -42,7 +40,7 @@ mod tests {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let game_state = web::Data::new(Arc::new(Mutex::new(game_state::GameState::new())));
+    let game_state = web::Data::new(Arc::new(game_state::GameState::new()));
     HttpServer::new(move || {
         let tera = Tera::new("templates/**/*.html").unwrap();
         let dictionary = bog::TrieNode::build_trie("./dict/other_word_list.txt");

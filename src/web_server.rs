@@ -2,10 +2,8 @@ use actix_rt::time::Instant;
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::Mutex;
 use std::time::Duration;
 use tera::{Context, Tera};
-
 use crate::game_state::GameStatus;
 
 use super::bog;
@@ -17,19 +15,19 @@ static LIFETIME_SECONDS: u64 = 3 * 60;
 pub async fn eval_guess(
     req: HttpRequest,
     score_map: web::Data<HashMap<usize, usize>>,
-    state: web::Data<Arc<Mutex<game_state::GameState>>>,
+    state: web::Data<Arc<game_state::GameState>>,
 ) -> impl Responder {
     let guess = &req.match_info().get("word").unwrap().to_lowercase();
     let room_id = req.match_info().get("room").unwrap();
     let player_id = req.match_info().get("player").unwrap();
-    let mut game_state = state.lock().unwrap();
-    let mut room = if let Some(room) = game_state.games.get_mut(room_id) {
+    let mut room = if let Some(room) = state.games.get_mut(room_id) {
         room
     } else {
         return HttpResponse::BadRequest()
             .reason("Room not found")
             .body("Room not found");
     };
+    let room = room.value_mut();
     let player = if let Some(player) = room.players.get_mut(player_id) {
         player
     } else {
@@ -70,12 +68,11 @@ pub async fn eval_guess(
     HttpResponse::Ok().json(response)
 }
 
-async fn check_cleanup(state: web::Data<Arc<Mutex<game_state::GameState>>>, token: String) {
+async fn check_cleanup(state: web::Data<Arc<game_state::GameState>>, token: String) {
     actix_rt::time::delay_for(Duration::from_secs(LIFETIME_SECONDS)).await;
-    let mut game_state = state.lock().unwrap();
-    let expiration_time = game_state.games[&token].expiration_time;
+    let expiration_time = state.games.get(&token).unwrap().expiration_time;
     if Instant::now() >= expiration_time {
-        let game = &game_state.games[&token];
+        let game = &state.games.get(&token).unwrap();
         println!(
             " --Session {} dropped-- \n
             =====results=====\n
@@ -88,23 +85,21 @@ async fn check_cleanup(state: web::Data<Arc<Mutex<game_state::GameState>>>, toke
             =======end=======",
             &token, &game.board, &game.solutions, &game.players
         );
-        game_state.forget(token);
+        state.games.remove(&token);
     }
 }
 
 pub async fn poll_lobby(
     req: HttpRequest,
     trie: web::Data<bog::TrieNode>,
-    state: web::Data<Arc<Mutex<game_state::GameState>>>,
+    state: web::Data<Arc<game_state::GameState>>,
 ) -> impl Responder {
     //player list
     let room_id = req.match_info().get("room_id").unwrap();
     let button_state = req.match_info().get("button_state").unwrap();
     let button_state = format!("\"{}\"", button_state);
     let button_state: responses::ButtonState = serde_json::from_str(&button_state).unwrap();
-    println!("{:#?}", button_state);
-    let mut game_state = state.lock().unwrap();
-    let mut room = if let Some(room) = game_state.games.get_mut(room_id) {
+    let mut room = if let Some(room) = state.games.get_mut(room_id) {
         room
     } else {
         return HttpResponse::BadRequest()
@@ -122,18 +117,18 @@ pub async fn poll_lobby(
 pub async fn poll_game(
     req: HttpRequest,
     score_map: web::Data<HashMap<usize, usize>>,
-    state: web::Data<Arc<Mutex<game_state::GameState>>>,
+    state: web::Data<Arc<game_state::GameState>>,
 ) -> impl Responder {
     let room_id = req.match_info().get("room_id").unwrap();
     let player_id = req.match_info().get("player_id").unwrap();
-    let mut game_state = state.lock().unwrap();
-    let room = if let Some(room) = game_state.games.get_mut(room_id) {
+    let mut room = if let Some(room) = state.games.get_mut(room_id) {
         room
     } else {
         return HttpResponse::BadRequest()
             .reason("Room not found")
             .body("Room not found");
     };
+    let mut room = room.value_mut();
     let mut player = if let Some(player) = room.players.get_mut(player_id) {
         player
     } else {
@@ -154,7 +149,7 @@ pub async fn poll_game(
         room.status = GameStatus::InLobby;
     }
     let response =
-        responses::GamePollResponse::from_room_and_player(&String::from(player_id), room);
+        responses::GamePollResponse::from_room_and_player(&String::from(player_id), &room);
     let response = serde_json::to_string_pretty(&response).unwrap();
     HttpResponse::Ok().json(response)
 }
@@ -162,13 +157,12 @@ pub async fn poll_game(
 pub async fn single_player(
     tera: web::Data<Tera>,
     trie: web::Data<bog::TrieNode>,
-    state: web::Data<Arc<Mutex<game_state::GameState>>>,
+    state: web::Data<Arc<game_state::GameState>>,
 ) -> impl Responder {
     let mut data = Context::new();
-    let mut game_state = state.lock().unwrap();
-    let session_token = game_state.new_session_single();
-    let mut game = game_state.games.get_mut(&session_token).unwrap();
-    println!(" --Session {} created-- ", &session_token);
+    let session_token = state.new_session_single();
+    let mut game = state.games.get_mut(&session_token).unwrap();
+    println!(" --Single-player room {} created-- ", &session_token);
     data.insert("title", "BogChamp");
     data.insert("rows", &game.board.letters);
     let solution_set = game.board.solve(trie.get_ref());
@@ -187,19 +181,19 @@ pub async fn multi_player(
     req: HttpRequest,
     tera: web::Data<Tera>,
     trie: web::Data<bog::TrieNode>,
-    state: web::Data<Arc<Mutex<game_state::GameState>>>,
+    state: web::Data<Arc<game_state::GameState>>,
 ) -> impl Responder {
     let mut data = Context::new();
-    let mut game_state = state.lock().unwrap();
     let room_id = req.match_info().get("room_id").unwrap();
     let player_id = req.match_info().get("player_id").unwrap();
-    let room = if let Some(room) = game_state.games.get_mut(room_id) {
+    let mut room = if let Some(room) = state.games.get_mut(room_id) {
         room
     } else {
         return HttpResponse::BadRequest()
             .reason("Room not found")
             .body("Room not found");
     };
+    let room = room.value_mut();
     let player = if let Some(player) = room.players.get_mut(player_id) {
         player
     } else {
@@ -228,19 +222,19 @@ pub async fn lobby(
     req: HttpRequest,
     tera: web::Data<Tera>,
     trie: web::Data<bog::TrieNode>,
-    state: web::Data<Arc<Mutex<game_state::GameState>>>,
+    state: web::Data<Arc<game_state::GameState>>,
 ) -> impl Responder {
     let room_id = req.match_info().get("room_id").unwrap();
     let player_id = req.match_info().get("player_id").unwrap();
     let mut data = Context::new();
-    let mut game_state = state.lock().unwrap();
-    let room = if let Some(room) = game_state.games.get_mut(room_id) {
+    let mut room = if let Some(room) = state.games.get_mut(room_id) {
         room
     } else {
         return HttpResponse::BadRequest()
             .reason("Room not found")
             .body("Room not found");
     };
+    let room = room.value_mut();
     let player = if let Some(player) = room.players.get_mut(player_id) {
         player
     } else {
@@ -274,24 +268,23 @@ pub async fn index(tera: web::Data<Tera>) -> impl Responder {
 
 pub async fn create_lobby(
     req: HttpRequest,
-    state: web::Data<Arc<Mutex<game_state::GameState>>>,
+    state: web::Data<Arc<game_state::GameState>>,
 ) -> impl Responder {
-    let room_name = req.match_info().get("room_name").unwrap_or("");
-    let mut game_state = state.lock().unwrap();
-    let room_id = game_state.new_session_multi(String::from(room_name));
+    let room_name = req.match_info().get("room_name").unwrap();
+    let room_id = state.new_session_multi(String::from(room_name));
     // let room_ids: Vec<String> = game_state.games.keys().cloned().collect();
     actix_rt::spawn(check_cleanup(state.clone(), room_id.clone()));
-    println!("Room {} created", room_id);
+    println!(" --Multiplayer room {} created-- ", room_id);
     HttpResponse::Ok().json(room_id)
 }
 pub async fn insert_player(
     req: HttpRequest,
-    state: web::Data<Arc<Mutex<game_state::GameState>>>,
+    state: web::Data<Arc<game_state::GameState>>,
 ) -> impl Responder {
     let room_id = req.match_info().get("room_id").unwrap_or("");
     let player_name = req.match_info().get("player_name").unwrap_or("");
-    let mut game_state = state.lock().unwrap();
-    if let Some(room) = game_state.games.get_mut(room_id) {
+    if let Some(mut room) = state.games.get_mut(room_id) {
+        let room = room.value_mut();
         let player_id = room.new_player(String::from(player_name));
         println!("Player {} inserted into room {}.", room_id, player_id);
         return HttpResponse::Ok().json(player_id);

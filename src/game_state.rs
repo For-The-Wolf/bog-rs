@@ -5,7 +5,7 @@ use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::iter;
-
+use dashmap::DashMap;
 use super::bog;
 
 pub static SCORES: [(usize, usize); 13] = [
@@ -119,13 +119,13 @@ impl Game {
 }
 
 pub struct GameState {
-    pub games: HashMap<String, Game>,
+    pub games: DashMap<String, Game>,
 }
 
 impl GameState {
     pub fn new() -> Self {
         GameState {
-            games: HashMap::<String, Game>::new(),
+            games: DashMap::<String, Game>::new(),
         }
     }
     fn generate_token() -> String {
@@ -137,9 +137,9 @@ impl GameState {
             .collect();
         token
     }
-    pub fn new_session_single(&mut self) -> String {
+    pub fn new_session_single(&self) -> String {
         let mut room_id = Self::generate_token();
-        while self.games.keys().any(|id| &room_id == id) {
+        while self.games.contains_key(&room_id) {
             room_id = Self::generate_token();
         }
         self.games
@@ -154,15 +154,12 @@ impl GameState {
         );
         room_id
     }
-    pub fn new_session_multi(&mut self, room_name: String) -> String {
+    pub fn new_session_multi(&self, room_name: String) -> String {
         let mut room_id = Self::generate_token();
-        while self.games.keys().any(|id| &room_id == id) {
+        while self.games.contains_key(&room_id) {
             room_id = Self::generate_token();
         }
         self.games.insert(room_id.clone(), Game::new(room_name));
         room_id
-    }
-    pub fn forget(&mut self, room_id: String) {
-        self.games.remove(&room_id);
     }
 }

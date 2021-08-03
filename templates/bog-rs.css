@@ -2,14 +2,32 @@
 	margin-left: auto;
 	margin-right:auto;
 }
-.bottom {
+.main{
+	text-align: center;
+	position: absolute;
+	width: 100%;
+	top: 200px;
+	bottom: 100px;
+	overflow: auto;
+}
+.header{
+		text-align: center;
+		position: fixed;
+		background-color: #fdf6e3;
+		width: 100%;
+    height: 200px;
+
+}
+.footer {
     position: fixed;
-    bottom: 8px;
+    bottom: 0px;
 		background-color: #fdf6e3;
 		text-align: center;
 		width: 100%;
+		height:100px
 		color:	#1D3542;
-		font-size: 14px;
+		font-size: 18px;
+		font-weight: bold;
 		font-family: Courier New;
 }
 body{
@@ -19,6 +37,7 @@ body{
 	zoom: 0.9; 
 	-moz-transform: scale(0.9); 
 	-moz-transform-origin: 0 0;
+	padding-bottom: 50px;
 }
 p{
 	max-width: 600px;
