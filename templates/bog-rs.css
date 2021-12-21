@@ -4,7 +4,7 @@
 }
 .bottom {
     position: fixed;
-    bottom: 8px;
+    bottom: 0px;
 		background-color: #fdf6e3;
 		text-align: center;
 		width: 100%;
@@ -19,6 +19,12 @@ body{
 	zoom: 0.9; 
 	-moz-transform: scale(0.9); 
 	-moz-transform-origin: 0 0;
+	height: 100%;
+	padding-bottom: 40px;
+}
+html{
+	position: relative;
+	min-height: 100%;
 }
 p{
 	max-width: 600px;
