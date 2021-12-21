@@ -13,5 +13,6 @@ Includes:
  - [x] Fix shared state across multiple sessions.
  - [x] Multiplayer beta (rooms, real-time scoring, synchronised timing, etc.).
  - [x] Multiplayer stable release (inc. pretty UI).
+ - [x] Fix bug with CSS in FireFox 
  - [ ] Update server to store state in concurrent hashmap (`DashMap< >`) rather than `Mutex<HashMap< >>`.
  - [ ] Use `actix_actors::ws` for Websockets
